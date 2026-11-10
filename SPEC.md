@@ -218,7 +218,7 @@ Giữ phong cách hiện có: type hint `X | None`, dependency injection qua `po
 
 1. Tên chính xác model judge (`Qwen/Qwen3.5-9B`?) và vLLM đã hỗ trợ Qwen3.5 chưa; cách tắt thinking.
 2. ~~Mức mất dữ liệu do cách ly~~ **Đã chốt:** 39,5% (617 câu) với test 100 câu; còn train 744 và dev 100. Tăng số câu test về sau sẽ làm train giảm mạnh (test 200 câu: còn ~390 câu sạch).
-3. Map khóa `evidence` (`context_1..n`) sang `used_context_ids` có đúng thứ tự không.
+3. ~~Map khóa `evidence`~~ **Đã kiểm tra (T3):** ánh xạ theo vị trí đúng, nhưng chỉ 13,8% bản ghi có `evidence` là trích dẫn nguyên văn; phần còn lại là câu tóm tắt. Dữ liệu LoRA cắt quote trực tiếp từ đoạn vàng theo độ trùng từ với câu trả lời tham chiếu.
 4. PEFT/TRL và `--enable-lora` của vLLM có hỗ trợ kiến trúc Qwen3.5 không.
 5. ~~GPU cho LoRA~~ **Đã chốt: 48GB** (LoRA bf16). Lưu ý khi đánh giá: Qwen3.5-4B + adapter (~9GB) và judge Qwen3.5-9B (~19GB bf16) chạy cùng lúc trên 48GB rất sát KV cache; cần chọn giữa lượng tử hóa judge (AWQ/FP8), hạ `--max-model-len`, hoặc chạy hai lượt (sinh câu trả lời trước, chấm điểm sau).
 6. ~~Số câu đánh giá~~ **Đã chốt: 100 câu test** (20 mỗi hop); xem kết quả rồi quyết định có tăng không.

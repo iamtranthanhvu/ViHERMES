@@ -38,14 +38,16 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 3: Kiểm tra ánh xạ `evidence` ↔ `used_context_ids` (chỉ đọc)
 **Description:** Script kiểm tra trên dữ liệu thật: khóa `context_n` trong `evidence` có khớp thứ tự `used_context_ids` không, và bao nhiêu đoạn trích là chuỗi con nguyên văn của đoạn vàng tương ứng. Kết quả quyết định thiết kế dữ liệu LoRA (Task 13).
 **Acceptance criteria:**
-- [ ] In tỉ lệ mẫu mà mọi đoạn trích đều là chuỗi con của một đoạn vàng; tách theo hop.
-- [ ] Ghi rõ quy tắc ánh xạ khóa phát hiện được, hoặc ghi "không ánh xạ được" kèm phương án thay thế (khớp theo nội dung).
-- [ ] Không sửa dữ liệu.
+- [x] In tỉ lệ mẫu mà mọi đoạn trích đều là chuỗi con của một đoạn vàng; tách theo hop.
+- [x] Ghi rõ quy tắc ánh xạ khóa phát hiện được, hoặc ghi "không ánh xạ được" kèm phương án thay thế (khớp theo nội dung).
+- [x] Không sửa dữ liệu.
 **Verification:**
-- [ ] `python scripts/check_evidence.py dataset/dataset.jsonl`
+- [x] `python scripts/check_evidence.py dataset/dataset.jsonl`
 **Dependencies:** None
 **Files likely touched:** `scripts/check_evidence.py`
 **Estimated scope:** XS (1 file)
+
+**Kết quả (đã chạy trên dữ liệu thật):** khóa `context_k` ánh xạ theo **vị trí** với `used_context_ids[k-1]` khi đoạn trích là nguyên văn, nhưng **chỉ 216/1.561 bản ghi (13,8%)** có mọi đoạn trích khớp nguyên văn (hop 1: 212/312; hop 2: 2; hop 3: 0; hop 4: 2; hop 5: 0). Phần còn lại của `evidence` là **câu tóm tắt**, không phải trích dẫn. Hệ quả cho Task 13: không dùng `evidence` làm quote; cắt quote trực tiếp từ đoạn vàng.
 
 ### Task 4: `evaluate` theo split (`--split`, `--part`, `--resume`) + ghi config/timing
 **Description:** Cho `evaluate` chạy trên một phần của `configs/split.json` (mặc định không dùng split: hành vi cũ). Thêm `--resume`. Ghi `config.json` đầy đủ (hash split, phiên bản thư viện, GPU, git commit) và `timing.json`. Chỉ số giữ nguyên: Recall@k (dùng `--ks 5`), F1, judge.
@@ -187,7 +189,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ## Phase 3: `baseline/3-lora` (B3)
 
 ### Task 13: Dữ liệu LoRA cho Conductor
-**Description:** `training/lora_data.py`: mỗi mẫu là một lần gọi Conductor đúng định dạng suy luận (import `GENERATE` và `serialize_evidence` từ `agents.py`), đích là JSON `{claims, abstain}` với `quotes` lấy từ trường `evidence` theo quy tắc phát hiện ở Task 3; ~15% mẫu abstain (bỏ đoạn vàng khỏi evidence). Mẫu không thỏa `quote in node.text` bị loại và đếm lại. Lệnh `vihermes make-lora-data`.
+**Description:** `training/lora_data.py`: mỗi mẫu là một lần gọi Conductor đúng định dạng suy luận (import `GENERATE` và `serialize_evidence` từ `agents.py`), đích là JSON `{claims, abstain}`. Vì Task 3 cho thấy `evidence` chủ yếu là câu tóm tắt, **quote được cắt trực tiếp từ đoạn vàng**: ưu tiên `evidence` nếu nó là chuỗi con nguyên văn; nếu không, chọn cửa sổ văn bản (câu hoặc cụm ≤ ~300 ký tự) có độ trùng từ cao nhất với câu trả lời tham chiếu và phần tóm tắt, lấy nguyên văn theo vị trí ký tự nên luôn thỏa `quote in node.text`. ~15% mẫu abstain (bỏ đoạn vàng khỏi evidence). Mẫu không chọn được quote đủ trùng bị loại và đếm lại. Lệnh `vihermes make-lora-data`.
 **Acceptance criteria:**
 - [ ] Mọi mẫu `abstain=false` có mọi quote là chuỗi con của đoạn được cite (dùng đúng điều kiện của Auditor).
 - [ ] Không mẫu nào chứa câu hỏi hoặc đoạn vàng của test/quarantined.

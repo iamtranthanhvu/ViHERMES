@@ -43,7 +43,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 ### Phase 1 — `baseline/1-local` (B1 + nền tảng dùng chung)
 - [x] T1: Module chia split chống rò rỉ + lệnh `vihermes split`
 - [x] T2: Chạy split trên dataset thật, review thống kê, chốt `configs/split.json`
-- [ ] T3: Kiểm tra ánh xạ `evidence` ↔ `used_context_ids` trên dữ liệu thật (chỉ đọc)
+- [x] T3: Kiểm tra ánh xạ `evidence` ↔ `used_context_ids` trên dữ liệu thật (chỉ đọc)
 - [ ] T4: `evaluate` theo split (`--split --part test`, `--resume`, ghi config/timing)
 - [ ] T5: Model local: `base_url`, `extra_body`, `--conductor-model`, `--no-thinking`
 
@@ -80,7 +80,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 | vLLM / PEFT / TRL chưa hỗ trợ kiến trúc Qwen3.5 | Cao | `make smoke` trên H1 trước khi chạy dài; nếu hỏng, đổi sang họ Qwen3 và báo bạn (đổi spec) |
 | Cách thức tắt thinking cho Qwen3.5 không đúng | Cao | `smoke` kiểm tra `content` không chứa khối suy luận; có phương án `--reasoning-parser` |
 | Cách ly rò rỉ làm mất quá nhiều dữ liệu train | Trung bình | T2 đo trước, bạn quyết ngưỡng; có thể hạ tỉ lệ test |
-| Khóa `evidence` không khớp `used_context_ids` | Trung bình | T3 kiểm tra sớm; mẫu không khớp bị loại và đếm lại |
+| `evidence` không phải trích dẫn nguyên văn (T3: chỉ 13,8% khớp) | **Đã xảy ra** | T13 cắt quote trực tiếp từ đoạn vàng theo độ trùng từ; quote nguyên văn theo cách xây dựng |
 | 48GB không đủ cho 4B + adapter + judge 9B cùng lúc | Trung bình | Tùy chọn judge lượng tử hóa trong `host.env`, **cùng một cấu hình cho cả 4 host** |
 | Xung đột merge ở `cli.py`, `Makefile`, `pyproject.toml` | Trung bình | Quyết định kiến trúc ở trên (extra chung, module riêng, `include make/*.mk`) |
 | Lỗi Makefile chỉ lộ khi đã thuê host (tốn tiền) | Trung bình | `make dryrun` offline, `make -n`, `bash -n` |
