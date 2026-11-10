@@ -139,7 +139,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 **Estimated scope:** Medium (4 files)
 
 ### Checkpoint B: cổng người dùng (cần GPU)
-- [ ] Tất cả test và `make dryrun` qua trên máy phát triển
+- [x] Tất cả test và `make dryrun` qua trên máy phát triển
 - [ ] Người dùng thuê H1, chạy `make setup && make smoke`: xác nhận Qwen3.5 chạy trên vLLM, tắt thinking đúng, JSON hợp lệ
 - [ ] Nếu `smoke` lỗi: dừng, báo tôi; có thể phải đổi họ model (cập nhật spec)
 - [ ] Người dùng chạy `make b1` và nhận `report-b1.tar.gz`
