@@ -205,11 +205,11 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 14: Huấn luyện LoRA `Qwen3.5-4B`
 **Description:** `training/lora.py`: `peft` + `trl` `SFTTrainer`, LoRA bf16 (48GB), gradient checkpointing, loss chỉ trên phần assistant, tắt thinking trong chat template, chọn checkpoint theo eval loss trên dev, lưu adapter và `train_meta.json`. Lệnh `vihermes finetune-lora`.
 **Acceptance criteria:**
-- [ ] Smoke test `--max-steps 2` với model rất nhỏ lưu được adapter.
-- [ ] Loss chỉ tính trên phần assistant (test kiểm mặt nạ nhãn).
-- [ ] Không dùng test; thư viện nặng import trễ.
+- [x] Smoke test `--max-steps 2` với model rất nhỏ lưu được adapter.
+- [x] Loss chỉ tính trên phần assistant (test kiểm mặt nạ nhãn).
+- [x] Không dùng test; thư viện nặng import trễ.
 **Verification:**
-- [ ] `pytest -q tests/test_lora_train.py` (`importorskip`)
+- [x] `pytest -q tests/test_lora_train.py` (`importorskip`)
 **Dependencies:** Task 6, 13
 **Files likely touched:** `src/vihermes/training/lora.py`, `src/vihermes/cli.py`, `tests/test_lora_train.py`
 **Estimated scope:** Small (3 files)

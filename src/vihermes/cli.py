@@ -194,6 +194,27 @@ def parser():
     comp.add_argument("reports", nargs="+")
     comp.add_argument("--output-dir", default="outputs/compare")
     comp.add_argument("--baseline", default="b1")
+    fl = sub.add_parser(
+        "finetune-lora", help="LoRA fine-tune the Conductor on make-lora-data output"
+    )
+    fl.add_argument("--data-dir", required=True, help="folder with train.jsonl and dev.jsonl")
+    fl.add_argument("--qa", required=True)
+    fl.add_argument("--split", required=True)
+    fl.add_argument("--base", default="Qwen/Qwen3.5-4B")
+    fl.add_argument("--revision")
+    fl.add_argument("--output", required=True)
+    fl.add_argument("--epochs", type=int, default=2)
+    fl.add_argument("--lr", type=float, default=2e-4)
+    fl.add_argument("--batch-size", type=int, default=1)
+    fl.add_argument("--grad-accum", type=int, default=8)
+    fl.add_argument("--max-seq-length", type=int, default=8192)
+    fl.add_argument("--rank", type=int, default=16)
+    fl.add_argument("--alpha", type=int, default=32)
+    fl.add_argument("--dropout", type=float, default=0.05)
+    fl.add_argument("--max-steps", type=int, default=-1)
+    fl.add_argument("--seed", type=int, default=42)
+    fl.add_argument("--no-gradient-checkpointing", action="store_true")
+    fl.add_argument("--thinking", action="store_true", help="keep the model's reasoning mode on")
     publish = sub.add_parser("publish", help="upload a model folder to a private HF repo")
     publish.add_argument("--path", required=True)
     publish.add_argument("--repo", required=True)
@@ -254,6 +275,29 @@ def run(args):
         return demo(args.output)
     if args.command == "extract-contexts":
         return {"contexts": extract_contexts(args.qa, args.output)}
+    if args.command == "finetune-lora":
+        from .splits import load_split
+        from .training.lora import train_lora
+
+        split = load_split(args.split)
+        by_id = {e.id: e for e in load_qa(args.qa)}
+        data = Path(args.data_dir)
+
+        def read(name):
+            path = data / name
+            return [json.loads(x) for x in path.read_text("utf-8").splitlines() if x.strip()]
+
+        return train_lora(
+            read("train.jsonl"), read("dev.jsonl"), args.output, base=args.base,
+            revision=args.revision, epochs=args.epochs, lr=args.lr, batch_size=args.batch_size,
+            grad_accum=args.grad_accum, max_seq_length=args.max_seq_length, rank=args.rank,
+            alpha=args.alpha, dropout=args.dropout, max_steps=args.max_steps, seed=args.seed,
+            no_thinking=not args.thinking,
+            gradient_checkpointing=not args.no_gradient_checkpointing,
+            forbidden_qids=set(split["test"]) | set(split["quarantined"]),
+            forbidden_passages={c for i in split["test"] for c in by_id[i].gold_context_ids},
+            meta={"split_hash": split["hash"], "split_file": args.split},
+        )  # fmt: skip
     if args.command == "pack":
         from .report import pack
 
