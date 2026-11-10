@@ -120,7 +120,7 @@ def build_lora_rows(
     min_overlap=2,
     inject_gold=True,
 ):
-    """Return ``(rows, stats)`` for the questions of ``part`` ("train" or "dev").
+    """Return ``(rows, stats)`` for the questions of ``part`` ("train" or "validation").
 
     ``raw`` holds the dataset records (same order as the file) for the summary in ``evidence``;
     ``nodes_by_id`` maps passage id to its Node. Passages that answer any test question are
@@ -132,8 +132,8 @@ def build_lora_rows(
     missing ones replace the lowest-ranked non-gold passages (the prompt keeps its size); its
     real, incomplete retrieval still becomes an abstention.
     """
-    if part not in ("train", "dev"):
-        raise ValueError("part must be 'train' or 'dev'")
+    if part not in ("train", "validation"):
+        raise ValueError("part must be 'train' or 'validation'")
     if not 0 <= abstain_fraction < 1:
         raise ValueError("abstain_fraction must be in [0, 1)")
     by_id = {e.id: e for e in examples}

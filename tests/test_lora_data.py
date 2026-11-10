@@ -93,7 +93,7 @@ def world():
                     }
                 }
             )
-        split = make_split(examples, test_size=9, dev=0.2)
+        split = make_split(examples, test_size=9, validation=0.2)
         pathfinder = Pathfinder(HybridRetriever(graph, weight=0), GraphPropagator(graph), k=5)
         nodes = {n.id: n for n in units(graph)}
         yield examples, raw, split, pathfinder, nodes
@@ -185,7 +185,7 @@ def test_no_test_question_or_test_passage_reaches_the_training_data(world):
     examples, _, split, _, _ = world
     by_id = {e.id: e for e in examples}
     test_gold = {c for i in split["test"] for c in by_id[i].gold_context_ids}
-    for part in ("train", "dev"):
+    for part in ("train", "validation"):
         rows, _ = build(world, part)
         assert rows and {r["meta"]["qid"] for r in rows} <= set(split[part])
         for row in rows:
@@ -264,10 +264,11 @@ def test_cli_make_lora_data_on_the_fixture(tmp_path):
     train = [
         json.loads(line) for line in (out / "train.jsonl").read_text(encoding="utf-8").splitlines()
     ]
-    dev = [
-        json.loads(line) for line in (out / "dev.jsonl").read_text(encoding="utf-8").splitlines()
+    validation = [
+        json.loads(line)
+        for line in (out / "validation.jsonl").read_text(encoding="utf-8").splitlines()
     ]
-    assert len(train) == stats["train"]["rows"] > 0 and dev
+    assert len(train) == stats["train"]["rows"] > 0 and validation
     assert (
         json.loads((out / "data_stats.json").read_text())["split_hash"]
         == json.loads(split_file.read_text())["hash"]
@@ -275,7 +276,7 @@ def test_cli_make_lora_data_on_the_fixture(tmp_path):
     split = json.loads(split_file.read_text())
     qa = {e.id: e for e in load_qa(FIXTURE)}
     test_gold = {c for i in split["test"] for c in qa[i].gold_context_ids}
-    for row in train + dev:
+    for row in train + validation:
         assert row["meta"]["qid"] not in split["test"]
         assert (
             not {e["id"] for e in json.loads(row["messages"][1]["content"])["evidence"]} & test_gold

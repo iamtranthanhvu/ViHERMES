@@ -1,7 +1,7 @@
 """LoRA fine-tuning of the Conductor on chat samples from ``make-lora-data``.
 
 The prompt is built with the model's own chat template exactly as at inference time (thinking
-switched off), and only the answer tokens carry loss. The best epoch by dev loss is kept as a
+switched off), and only the answer tokens carry loss. The best epoch by validation loss is kept as a
 small adapter under ``output/adapter``. Heavy libraries load only when training starts.
 """
 
@@ -100,7 +100,7 @@ class _Rows:
 
 def train_lora(
     train_rows,
-    dev_rows,
+    validation_rows,
     output,
     base="Qwen/Qwen3.5-4B",
     revision=None,
@@ -120,7 +120,7 @@ def train_lora(
     forbidden_passages=(),
     meta=None,
 ):
-    """Train a LoRA adapter; keep the epoch with the lowest dev loss; return the run record."""
+    """Train a LoRA adapter; keep the epoch with the lowest validation loss; return the run record."""
     import dataclasses
 
     import torch
@@ -128,7 +128,9 @@ def train_lora(
     from peft import LoraConfig, get_peft_model
 
     _check_not_forbidden(
-        {"train": train_rows, "dev": dev_rows}, set(forbidden_qids), set(forbidden_passages)
+        {"train": train_rows, "validation": validation_rows},
+        set(forbidden_qids),
+        set(forbidden_passages),
     )
     output = Path(output)
     adapter_dir = output / "adapter"
@@ -139,7 +141,7 @@ def train_lora(
         tokenizer.pad_token = tokenizer.eos_token
 
     encoded, dropped, lengths = {}, {}, []
-    for name, items in (("train", train_rows), ("dev", dev_rows)):
+    for name, items in (("train", train_rows), ("validation", validation_rows)):
         kept = [
             encode_example(tokenizer, r["messages"], max_seq_length, no_thinking) for r in items
         ]
@@ -171,11 +173,13 @@ def train_lora(
 
     history = {"epochs": [], "best": None, "best_epoch": None}
 
-    class KeepBestOnDev(transformers.TrainerCallback):
+    class KeepBestOnValidation(transformers.TrainerCallback):
         def on_evaluate(self, args, state, control, metrics=None, model=None, **kwargs):
             loss = (metrics or {}).get("eval_loss")
             label = f"epoch {state.epoch:.2f}" if state.epoch is not None else "final"
-            history["epochs"].append({"label": label, "step": state.global_step, "dev_loss": loss})
+            history["epochs"].append(
+                {"label": label, "step": state.global_step, "validation_loss": loss}
+            )
             if loss is not None and (history["best"] is None or loss < history["best"]):
                 history["best"], history["best_epoch"] = loss, label
                 model.save_pretrained(str(adapter_dir))
@@ -195,7 +199,7 @@ def train_lora(
         "seed": seed,
         "logging_steps": 5,
         "save_strategy": "no",
-        "eval_strategy": "epoch" if encoded["dev"] else "no",
+        "eval_strategy": "epoch" if encoded["validation"] else "no",
         "report_to": "none",
         "remove_unused_columns": False,
         ("warmup_ratio" if "warmup_ratio" in fields else "warmup_steps"): 0.03,
@@ -206,13 +210,15 @@ def train_lora(
         model=model,
         args=arguments,
         train_dataset=_Rows(encoded["train"]),
-        eval_dataset=_Rows(encoded["dev"]) if encoded["dev"] else None,
+        eval_dataset=_Rows(encoded["validation"]) if encoded["validation"] else None,
         data_collator=lambda batch: collate(batch, pad_id),
-        callbacks=[KeepBestOnDev()],
+        callbacks=[KeepBestOnValidation()],
     )
     started = time.perf_counter()
     trainer.train()
-    if encoded["dev"] and history["best"] is None:  # e.g. max_steps ended before an epoch did
+    if (
+        encoded["validation"] and history["best"] is None
+    ):  # e.g. max_steps ended before an epoch did
         trainer.evaluate()
     if not adapter_dir.exists():
         model.save_pretrained(str(adapter_dir))
@@ -246,7 +252,7 @@ def train_lora(
         },
         "trainable_params": trainable,
         "total_params": total,
-        "dev_loss": history,
+        "validation_loss": history,
         "loss": [
             {"step": e["step"], "loss": e["loss"]} for e in trainer.state.log_history if "loss" in e
         ],

@@ -108,11 +108,11 @@ def test_training_smoke_saves_an_adapter_and_run_metadata(tiny_lm, tmp_path):
     saved = json.loads((out / "train_meta.json").read_text())
     assert saved == json.loads(json.dumps(record))
     assert saved["seed"] == 7 and saved["split_hash"] == "abc" and saved["steps"] == 2
-    assert saved["rows"] == {"train": 6, "dev": 3} and saved["dropped_too_long"] == {
+    assert saved["rows"] == {"train": 6, "validation": 3} and saved["dropped_too_long"] == {
         "train": 0,
-        "dev": 0,
+        "validation": 0,
     }
-    assert saved["dev_loss"]["best"] is not None and saved["trainable_params"] > 0
+    assert saved["validation_loss"]["best"] is not None and saved["trainable_params"] > 0
     assert saved["params"]["rank"] == 4 and "packages" in saved and saved["seconds"] >= 0
 
 

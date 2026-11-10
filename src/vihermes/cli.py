@@ -197,7 +197,9 @@ def parser():
     fl = sub.add_parser(
         "finetune-lora", help="LoRA fine-tune the Conductor on make-lora-data output"
     )
-    fl.add_argument("--data-dir", required=True, help="folder with train.jsonl and dev.jsonl")
+    fl.add_argument(
+        "--data-dir", required=True, help="folder with train.jsonl and validation.jsonl"
+    )
     fl.add_argument("--qa", required=True)
     fl.add_argument("--split", required=True)
     fl.add_argument("--base", default="Qwen/Qwen3.5-4B")
@@ -288,7 +290,7 @@ def run(args):
             return [json.loads(x) for x in path.read_text("utf-8").splitlines() if x.strip()]
 
         return train_lora(
-            read("train.jsonl"), read("dev.jsonl"), args.output, base=args.base,
+            read("train.jsonl"), read("validation.jsonl"), args.output, base=args.base,
             revision=args.revision, epochs=args.epochs, lr=args.lr, batch_size=args.batch_size,
             grad_accum=args.grad_accum, max_seq_length=args.max_seq_length, rank=args.rank,
             alpha=args.alpha, dropout=args.dropout, max_steps=args.max_steps, seed=args.seed,
@@ -381,7 +383,7 @@ def run(args):
             out = Path(args.output_dir)
             out.mkdir(parents=True, exist_ok=True)
             report = {"split_hash": split["hash"], "seed": args.seed}
-            for part in ("train", "dev"):
+            for part in ("train", "validation"):
                 rows, stats = build_lora_rows(
                     examples, raw, split, part, pathfinder, nodes, args.seed,
                     args.abstain_fraction, args.max_quote_chars, args.max_prompt_chars,
