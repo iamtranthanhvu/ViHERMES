@@ -44,7 +44,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 - [x] T1: Module chia split chống rò rỉ + lệnh `vihermes split`
 - [x] T2: Chạy split trên dataset thật, review thống kê, chốt `configs/split.json`
 - [x] T3: Kiểm tra ánh xạ `evidence` ↔ `used_context_ids` trên dữ liệu thật (chỉ đọc)
-- [ ] T4: `evaluate` theo split (`--split --part test`, `--resume`, ghi config/timing)
+- [x] T4: `evaluate` theo split (`--split --part test`, `--resume`, ghi config/timing)
 - [ ] T5: Model local: `base_url`, `extra_body`, `--conductor-model`, `--no-thinking`
 
 ### Checkpoint A: nền tảng đánh giá

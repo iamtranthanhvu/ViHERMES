@@ -52,14 +52,14 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 4: `evaluate` theo split (`--split`, `--part`, `--resume`) + ghi config/timing
 **Description:** Cho `evaluate` chạy trên một phần của `configs/split.json` (mặc định không dùng split: hành vi cũ). Thêm `--resume`. Ghi `config.json` đầy đủ (hash split, phiên bản thư viện, GPU, git commit) và `timing.json`. Chỉ số giữ nguyên: Recall@k (dùng `--ks 5`), F1, judge.
 **Acceptance criteria:**
-- [ ] `--split F --part test` chỉ đánh giá đúng các id đó.
-- [ ] Không có `--split`: kết quả giống hệt trước khi sửa (các test hiện có qua).
-- [ ] `--resume` bỏ qua id đã có trong `predictions.jsonl`; `metrics.json` tính trên toàn bộ.
-- [ ] `config.json` có hash split, tên model, `base_url`, phiên bản `vllm`/`torch`/`transformers` (nếu có), tên GPU (null nếu không), git commit.
-- [ ] Không thêm chỉ số mới.
+- [x] `--split F --part test` chỉ đánh giá đúng các id đó.
+- [x] Không có `--split`: kết quả giống hệt trước khi sửa (các test hiện có qua).
+- [x] `--resume` bỏ qua id đã có trong `predictions.jsonl`; `metrics.json` tính trên toàn bộ.
+- [x] `config.json` có hash split, tên model, `base_url`, phiên bản `vllm`/`torch`/`transformers` (nếu có), tên GPU (null nếu không), git commit.
+- [x] Không thêm chỉ số mới.
 **Verification:**
-- [ ] `pytest -q tests/test_evaluation.py tests/test_cli.py`
-- [ ] Chạy `evaluate --dense-weight 0` trên fixture nhỏ, có và không `--split`.
+- [x] `pytest -q tests/test_evaluation.py tests/test_cli.py`
+- [x] Chạy `evaluate --dense-weight 0` trên fixture nhỏ, có và không `--split`.
 **Dependencies:** Task 1
 **Files likely touched:** `src/vihermes/evaluation.py`, `src/vihermes/cli.py`, `tests/test_evaluation.py`
 **Estimated scope:** Small (3 files)

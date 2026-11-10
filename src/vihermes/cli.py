@@ -11,7 +11,7 @@ from pathlib import Path
 from . import __version__
 from .agents import Auditor, Conductor, Interpreter, Pathfinder
 from .data import extract_contexts, load_qa
-from .evaluation import evaluate
+from .evaluation import evaluate, run_environment
 from .graph import SQLiteGraph
 from .ingestion import ingest
 from .models import Plan
@@ -119,6 +119,9 @@ def parser():
             command.add_argument("--qa", required=True)
             command.add_argument("--output", required=True)
             command.add_argument("--limit", type=int)
+            command.add_argument("--split", help="split JSON made by `vihermes split`")
+            command.add_argument("--part", choices=["train", "dev", "test"], default="test")
+            command.add_argument("--resume", action="store_true")
             command.add_argument("--answers", action="store_true")
             command.add_argument("--judge", action="store_true")
             command.add_argument("--judge-model", default="gpt-4o")
@@ -238,6 +241,17 @@ def run(args):
         if args.command == "ask":
             return asdict(conductor(args, pathfinder).ask(args.question))
         examples = load_qa(args.qa)
+        split_info = None
+        if args.split:
+            from .splits import load_split
+
+            split = load_split(args.split)
+            by_id = {e.id: e for e in examples}
+            missing = [i for i in split[args.part] if i not in by_id]
+            if missing:
+                raise ValueError(f"Split refers to {len(missing)} questions absent from --qa")
+            examples = [by_id[i] for i in split[args.part]]
+            split_info = {"hash": split["hash"], "part": args.part}
         if args.limit is not None:
             if args.limit < 1:
                 raise ValueError("--limit must be positive")
@@ -249,17 +263,20 @@ def run(args):
             raise ValueError("--judge requires --answers")
         from .adapters.models import OpenAILanguageModel
 
-        report = evaluate(
+        config = vars(args).copy()
+        config.update(split_file=args.split, split=split_info, environment=run_environment())
+        Path(args.output).mkdir(parents=True, exist_ok=True)
+        (Path(args.output) / "config.json").write_text(json.dumps(config, indent=2) + "\n")
+        return evaluate(
             examples,
             pathfinder,
             args.output,
             conductor(args, pathfinder) if args.answers else None,
             OpenAILanguageModel(args.judge_model) if args.judge else None,
             ks,
+            resume=args.resume,
+            metadata={"split": split_info},
         )
-        config = vars(args).copy()
-        (Path(args.output) / "config.json").write_text(json.dumps(config, indent=2) + "\n")
-        return report
 
 
 def main():
