@@ -127,13 +127,13 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 9: Makefile `setup/smoke/b1/report/dryrun` + `docs/baselines.md`
 **Description:** `Makefile` dùng `include make/*.mk`; file `make/b1.mk`. `setup` (cài đặt, `extract-contexts`, `ingest`, kiểm hash split), `smoke` (đánh giá 5 câu, kiểm tra `content` không có khối suy luận và JSON hợp lệ), `b1` (index gốc → đánh giá `test` → `pack`), `dryrun` (toàn chuỗi offline với encoder `hash`, LLM giả, fixture nhỏ). Mỗi bước bỏ qua nếu đã có artifact.
 **Acceptance criteria:**
-- [ ] `make dryrun` chạy hết trên máy này không cần GPU/mạng và tạo `report-b1.tar.gz`.
-- [ ] Chạy `make dryrun` lần hai không làm lại bước đã xong.
-- [ ] `make -n b1` in đúng chuỗi lệnh và cờ model của B1.
-- [ ] `docs/baselines.md` có phần H1 ngắn gọn (vài lệnh).
+- [x] `make dryrun` chạy hết trên máy này không cần GPU/mạng và tạo `report-b1.tar.gz`.
+- [x] Chạy `make dryrun` lần hai không làm lại bước đã xong.
+- [x] `make -n b1` in đúng chuỗi lệnh và cờ model của B1.
+- [x] `docs/baselines.md` có phần H1 ngắn gọn (vài lệnh).
 **Verification:**
-- [ ] `make dryrun && make dryrun` (lần hai nhanh, không lỗi)
-- [ ] `make -n b1`
+- [x] `make dryrun && make dryrun` (lần hai nhanh, không lỗi)
+- [x] `make -n b1`
 **Dependencies:** Task 4, 5, 7, 8
 **Files likely touched:** `Makefile`, `make/b1.mk`, `docs/baselines.md`, `tests/fixtures/*` (fixture nhỏ)
 **Estimated scope:** Medium (4 files)

@@ -107,7 +107,7 @@ def test_notes_state_sample_size_split_and_judge(reports, tmp_path):
     compare([reports["b1"], reports["b2"]], tmp_path / "out")
     text = (tmp_path / "out" / "table.md").read_text()
     assert "100 questions" in text and "d" * 8 in text and "Qwen/Qwen3.5-9B" in text
-    assert "noise" in text
+    assert "±10 points" in text and "noise" in text  # n = 100 questions
 
 
 def test_compare_also_reads_plain_run_directories(tmp_path):

@@ -51,7 +51,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 - [x] T6: Extra `train` + `hub.py` (publish/fetch ghim revision)
 - [x] T7: `configs/host.env` + `scripts/serve.sh`
 - [x] T8: `vihermes pack` + `vihermes compare` (bảng, mức chênh, chốt chặn hash)
-- [ ] T9: Makefile `setup/smoke/b1/report/dryrun` + `docs/baselines.md`
+- [x] T9: Makefile `setup/smoke/b1/report/dryrun` + `docs/baselines.md`
 
 ### Checkpoint B: **cổng người dùng**, thuê H1, chạy `make smoke` rồi `make b1`
 

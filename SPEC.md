@@ -102,7 +102,7 @@ pytest -q && ruff check src tests
 vihermes split    --qa dataset/dataset.jsonl --output configs/split.json --seed 42   # chạy một lần, commit
 vihermes evaluate --qa dataset/dataset.jsonl --split configs/split.json --part test \
   --answers --judge --ks 5 --output outputs/<b1|b2|b3|b4>      # + cờ model theo từng baseline
-vihermes compare  report-b1.tar.gz report-b2.tar.gz report-b3.tar.gz report-b4.tar.gz > table.md
+vihermes compare  report-b1.tar.gz report-b2.tar.gz report-b3.tar.gz report-b4.tar.gz --output-dir outputs/compare
 ```
 
 Cờ model cho B1 (trên host): `--embedding sentence-transformers --embedding-model BAAI/bge-m3 --model Qwen/Qwen3.5-4B --base-url http://localhost:8000/v1 --judge-model Qwen/Qwen3.5-9B --judge-base-url http://localhost:8001/v1`. B2 đổi `--embedding-model` và `--index`; B3 thêm `--conductor-model conductor`; B4 dùng cả hai.
@@ -121,7 +121,7 @@ Mọi số liệu ghi tự động vào `outputs/`, không phải chép tay. Kh�
 | `outputs/<b>/config.json` | mọi cờ chạy, id model, `base_url`, embedding/index, hash split, git commit, phiên bản `vllm`/`torch`/`transformers`/`sentence-transformers`/`peft`/`trl`, tên GPU và VRAM | `evaluate` |
 | `outputs/<b>/timing.json` | thời gian build index, đánh giá, tổng | `evaluate`/`index` |
 | `outputs/embed-ft/train_meta.json`, `outputs/lora-conductor/train_meta.json` | seed, hash split, số mẫu (và số mẫu bị loại), siêu tham số, thời gian huấn luyện, loss train/dev theo bước, VRAM đỉnh | `finetune-*` |
-| `outputs/table.md`, `outputs/results.json` | bảng cuối (B1–B4 kèm mức chênh so với B1) và số thô để vẽ lại | `compare` |
+| `outputs/compare/table.md`, `outputs/compare/results.json` | bảng cuối (B1–B4 kèm mức chênh so với B1) và số thô để vẽ lại | `compare` |
 | `outputs/report-bN.tar.gz` | gói số liệu của mỗi host (metrics, predictions, config, timing, train_meta; không có trọng số, DB, log lớn) để `scp` về máy | `make report` |
 
 ## 4b. Chạy trên host: 4 host, mỗi baseline một host

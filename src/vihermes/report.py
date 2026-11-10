@@ -6,6 +6,7 @@ that were not measured under the same conditions.
 """
 
 import json
+import math
 import tarfile
 from pathlib import Path
 
@@ -119,6 +120,19 @@ def _format(value, delta, bold):
     return f"**{text}**" if bold else text
 
 
+def _interval(n):
+    """Rough 95% half-width, in points, of a proportion near 0.5 measured on n questions."""
+    return round(196 * math.sqrt(0.25 / n)) if n else None
+
+
+def _noise_note(n, by_hop):
+    hops = [h.get("n") for h in by_hop.values() if h.get("n")]
+    text = f"With {n} questions a score near 0.5 carries roughly ±{_interval(n)} points of noise"
+    if hops:
+        text += f" (±{_interval(min(hops))} points within a single hop of {min(hops)} questions)"
+    return text + "; differences smaller than that may be noise."
+
+
 def compare(sources, output_dir, baseline=BASELINE):
     """Build table.md and results.json from packed reports or run directories."""
     reports = [load_report(s) for s in sources]
@@ -164,8 +178,7 @@ def compare(sources, output_dir, baseline=BASELINE):
         f"(split `{split_hash[:8]}`), identical for every row; B1 is the reference and the "
         "bracketed values are differences from it.",
         f"Judge: {judge.get('model')} ({judge.get('quant')}); generator: {guard['model']}.",
-        "With this few questions the standard error is roughly ±10 points overall (±22 points "
-        "per hop), so differences smaller than that may be noise.",
+        _noise_note(guard["questions"], base["metrics"].get("by_hop") or {}),
     ]
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
