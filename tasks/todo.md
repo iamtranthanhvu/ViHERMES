@@ -10,14 +10,14 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 1: Module chia split chống rò rỉ + lệnh `vihermes split`
 **Description:** Thêm `splits.py` với "test trước, cách ly sau": chọn câu test phân tầng theo hop, gom đoạn vàng, loại khỏi train/dev các câu chạm đoạn vàng của test (`quarantined`), chia phần còn lại train/dev. Chọn `test_100` (20 câu mỗi hop) từ test.
 **Acceptance criteria:**
-- [ ] Cùng seed cho cùng kết quả và cùng hash; khác seed cho kết quả khác.
-- [ ] Mỗi câu thuộc đúng một trong `train/dev/test/quarantined`; tổng bằng số câu đầu vào.
-- [ ] Không đoạn vàng nào của câu test xuất hiện trong gold của câu train hoặc dev.
-- [ ] `test_100` có đúng 20 câu mỗi hop 1–5 và là tập con của `test`.
-- [ ] `vihermes split` in thống kê: số câu từng phần theo hop, số bị cách ly (% tổng), số đoạn từng phần.
+- [x] Cùng seed cho cùng kết quả và cùng hash; khác seed cho kết quả khác.
+- [x] Mỗi câu thuộc đúng một trong `train/dev/test/quarantined`; tổng bằng số câu đầu vào.
+- [x] Không đoạn vàng nào của câu test xuất hiện trong gold của câu train hoặc dev.
+- [x] `test_100` có đúng 20 câu mỗi hop 1–5 và là tập con của `test`.
+- [x] `vihermes split` in thống kê: số câu từng phần theo hop, số bị cách ly (% tổng), số đoạn từng phần.
 **Verification:**
-- [ ] `pytest -q tests/test_splits.py`
-- [ ] `ruff check src tests`
+- [x] `pytest -q tests/test_splits.py`
+- [x] `ruff check src tests`
 **Dependencies:** None
 **Files likely touched:** `src/vihermes/splits.py`, `src/vihermes/cli.py`, `tests/test_splits.py`
 **Estimated scope:** Small (3 files)

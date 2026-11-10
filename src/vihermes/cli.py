@@ -132,6 +132,13 @@ def parser():
             command.add_argument("--overlap", type=float, default=0.5)
             command.add_argument("--test-fraction", type=float, default=0.2)
             command.add_argument("--seed", type=int, default=42)
+    split = sub.add_parser("split")
+    split.add_argument("--qa", required=True)
+    split.add_argument("--output", required=True)
+    split.add_argument("--seed", type=int, default=42)
+    split.add_argument("--test", type=float, default=0.2)
+    split.add_argument("--dev", type=float, default=0.1)
+    split.add_argument("--report-size", type=int, default=100)
     audit = sub.add_parser("audit-data")
     audit.add_argument("--qa", required=True)
     extract = sub.add_parser("extract-contexts")
@@ -184,6 +191,12 @@ def run(args):
         return demo(args.output)
     if args.command == "extract-contexts":
         return {"contexts": extract_contexts(args.qa, args.output)}
+    if args.command == "split":
+        from .splits import make_split, save_split
+
+        split = make_split(load_qa(args.qa), args.seed, args.test, args.dev, args.report_size)
+        save_split(split, args.output)
+        return {"output": str(args.output), "hash": split["hash"], **split["stats"]}
     if args.command == "audit-data":
         examples = load_qa(args.qa)
         return {

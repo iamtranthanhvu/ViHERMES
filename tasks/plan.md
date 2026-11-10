@@ -41,7 +41,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 ## Task List (chỉ mục; chi tiết ở `tasks/todo.md`)
 
 ### Phase 1 — `baseline/1-local` (B1 + nền tảng dùng chung)
-- [ ] T1: Module chia split chống rò rỉ + lệnh `vihermes split`
+- [x] T1: Module chia split chống rò rỉ + lệnh `vihermes split`
 - [ ] T2: Chạy split trên dataset thật, review thống kê, chốt `configs/split.json`
 - [ ] T3: Kiểm tra ánh xạ `evidence` ↔ `used_context_ids` trên dữ liệu thật (chỉ đọc)
 - [ ] T4: `evaluate` theo split (`--split --part`, `--resume`, ghi config/timing)
