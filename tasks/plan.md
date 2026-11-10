@@ -63,7 +63,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 ### Phase 3 — `baseline/3-lora` (B3)
 - [x] T13: Dữ liệu LoRA cho Conductor
 - [x] T14: Huấn luyện LoRA `Qwen3.5-4B`
-- [ ] T15: `make b3` + chế độ `serve.sh lora`
+- [x] T15: `make b3` + chế độ `serve.sh lora`
 
 ### Checkpoint C: B2 và B3 chạy xong trên H2, H3; model nằm trên HF
 

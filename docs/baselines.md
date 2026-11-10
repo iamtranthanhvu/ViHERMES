@@ -7,8 +7,9 @@ baseline branch named below.
 | Host | Branch | Command | Result |
 | :-- | :-- | :-- | :-- |
 | H1 | `baseline/1-local` | `make b1` | `outputs/report-b1.tar.gz` |
+| H3 | `baseline/3-lora` | `make b3` | `outputs/report-b3.tar.gz` and a LoRA adapter on Hugging Face |
 
-(H2 to H4 are added with the branches `baseline/2-embed`, `baseline/3-lora`, `baseline/4-all`.)
+(H2 and H4 are added with the branches `baseline/2-embed` and `baseline/4-all`.)
 
 ## Before the first run
 
@@ -37,6 +38,27 @@ Copy the result to your machine:
 ```bash
 scp -P <PORT> root@<IP>:ViHERMES/outputs/report-b1.tar.gz .
 ```
+
+## H3: B3 (LoRA for the Conductor)
+
+```bash
+git clone <repo> ViHERMES && cd ViHERMES
+git checkout baseline/3-lora
+tmux new -s run
+export HF_TOKEN=...             # the WRITE token for iamtranthanhvu/vihermes-qwen35-4b-conductor-lora
+make setup
+make b3
+```
+
+`make b3` builds the base index, makes training samples from the train split (the exact
+Conductor prompt, answers quoted verbatim from the gold passages, plus abstentions), stops any
+vLLM server (training needs the whole GPU), trains a LoRA adapter, **uploads it to the private
+repo** (commit hash recorded in `outputs/lora-conductor/train_meta.json`), serves the generator
+with the adapter, evaluates with `--conductor-model conductor` and packs. The retriever is the
+B1 one: B3 changes only how the Conductor writes. It stops immediately if `HF_TOKEN` is missing.
+
+`outputs/lora-conductor/train_meta.json` also records how many training tokens each sample has;
+if many samples are dropped for exceeding `LORA_MAX_SEQ`, raise it in `configs/host.env`.
 
 ## Putting the table together (any machine, no GPU)
 

@@ -217,10 +217,10 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 15: `make b3` + chế độ `serve.sh lora`
 **Description:** `make/b3.mk`: index gốc → dữ liệu → huấn luyện → `publish` lên `iamtranthanhvu/vihermes-qwen35-4b-conductor-lora` → bật vLLM chế độ LoRA → đánh giá với `--conductor-model conductor` → `pack`. Mở rộng `dryrun` cho B3.
 **Acceptance criteria:**
-- [ ] `make dryrun-b3` chạy offline hết chuỗi trừ `publish` và vLLM (có chế độ giả).
-- [ ] Idempotent; lỗi dừng rõ ràng.
+- [x] `make dryrun-b3` chạy offline hết chuỗi trừ `publish` và vLLM (có chế độ giả).
+- [x] Idempotent; lỗi dừng rõ ràng.
 **Verification:**
-- [ ] `make dryrun-b3`; `make -n b3`
+- [x] `make dryrun-b3`; `make -n b3`
 **Dependencies:** Task 9, 14
 **Files likely touched:** `make/b3.mk`, `scripts/serve.sh`, `docs/baselines.md`
 **Estimated scope:** Small (3 files)
