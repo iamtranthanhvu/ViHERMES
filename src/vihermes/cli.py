@@ -15,7 +15,7 @@ from .evaluation import evaluate, run_environment
 from .graph import SQLiteGraph
 from .ingestion import ingest
 from .models import Plan
-from .retrieval import GraphPropagator, HybridRetriever, NumpyDenseIndex, units
+from .retrieval import GraphPropagator, HybridRetriever, NumpyDenseIndex, fingerprint, units
 
 
 def emit(value):
@@ -168,6 +168,15 @@ def parser():
     split.add_argument("--seed", type=int, default=42)
     split.add_argument("--test-size", type=int, default=100)
     split.add_argument("--dev", type=float, default=0.12)
+    pack = sub.add_parser("pack", help="bundle one run's numbers into a report archive")
+    pack.add_argument("--run", required=True)
+    pack.add_argument("--name", required=True)
+    pack.add_argument("--output", required=True)
+    pack.add_argument("--extra", nargs="*", default=[])
+    comp = sub.add_parser("compare", help="build the results table from several reports")
+    comp.add_argument("reports", nargs="+")
+    comp.add_argument("--output-dir", default="outputs/compare")
+    comp.add_argument("--baseline", default="b1")
     publish = sub.add_parser("publish", help="upload a model folder to a private HF repo")
     publish.add_argument("--path", required=True)
     publish.add_argument("--repo", required=True)
@@ -228,6 +237,15 @@ def run(args):
         return demo(args.output)
     if args.command == "extract-contexts":
         return {"contexts": extract_contexts(args.qa, args.output)}
+    if args.command == "pack":
+        from .report import pack
+
+        return {"report": str(pack(args.run, args.name, args.output, args.extra))}
+    if args.command == "compare":
+        from .report import compare
+
+        result = compare(args.reports, args.output_dir, args.baseline)
+        return {"table": str(Path(args.output_dir) / "table.md"), **result}
     if args.command == "publish":
         from .hub import publish
 
@@ -305,7 +323,17 @@ def run(args):
         if args.judge and not args.answers:
             raise ValueError("--judge requires --answers")
         config = vars(args).copy()
-        config.update(split_file=args.split, split=split_info, environment=run_environment())
+        config.update(
+            split_file=args.split,
+            split=split_info,
+            corpus=fingerprint(units(store)),
+            judge={
+                "model": args.judge_model,
+                "quant": os.environ.get("JUDGE_QUANT") or "bf16",
+                "revision": os.environ.get("JUDGE_REVISION") or None,
+            },
+            environment=run_environment(),
+        )
         Path(args.output).mkdir(parents=True, exist_ok=True)
         (Path(args.output) / "config.json").write_text(json.dumps(config, indent=2) + "\n")
         return evaluate(

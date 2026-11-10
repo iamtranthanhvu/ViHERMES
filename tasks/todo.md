@@ -114,12 +114,12 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 8: `vihermes pack` và `vihermes compare`
 **Description:** `pack` đóng gói số liệu của một baseline (metrics, predictions, config, timing, train_meta; **không** trọng số, DB, log lớn) thành `report-bN.tar.gz`. `compare` đọc các gói, xuất `table.md` và `results.json`: dòng B1 là gốc, dòng khác kèm `(+/−)` so với B1, in đậm giá trị tốt nhất mỗi cột.
 **Acceptance criteria:**
-- [ ] Bảng đúng 3 cột F1, LLM Judge, Recall@5, 4 chữ số thập phân, thang 0–1.
-- [ ] `compare` **từ chối** (lỗi rõ) nếu hash split, cấu hình judge hoặc hash corpus khác nhau giữa các gói.
-- [ ] Gói không chứa tệp `.safetensors`, `.db`, `.npz`.
-- [ ] Dưới bảng có ghi chú về tập test giữ lại và sai số của 100 câu.
+- [x] Bảng đúng 3 cột F1, LLM Judge, Recall@5, 4 chữ số thập phân, thang 0–1.
+- [x] `compare` **từ chối** (lỗi rõ) nếu hash split, cấu hình judge hoặc hash corpus khác nhau giữa các gói.
+- [x] Gói không chứa tệp `.safetensors`, `.db`, `.npz`.
+- [x] Dưới bảng có ghi chú về tập test giữ lại và sai số của 100 câu.
 **Verification:**
-- [ ] `pytest -q tests/test_report.py` (dữ liệu giả nhiều trường hợp: khớp, lệch hash, thiếu B1)
+- [x] `pytest -q tests/test_report.py` (dữ liệu giả nhiều trường hợp: khớp, lệch hash, thiếu B1)
 **Dependencies:** Task 4
 **Files likely touched:** `src/vihermes/report.py`, `src/vihermes/cli.py`, `tests/test_report.py`
 **Estimated scope:** Small (3 files)

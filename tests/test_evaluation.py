@@ -184,3 +184,14 @@ def test_cli_resume_flag(corpus):
     assert second.returncode == 0, second.stderr
     assert json.loads(second.stdout)["overall"]["n"] == 12
     assert len(lines(tmp / "out" / "predictions.jsonl")) == 12
+
+
+def test_config_records_corpus_hash_and_judge_settings(corpus):
+    _, _, _, tmp = corpus
+    result = evaluate_cli(corpus)
+    assert result.returncode == 0, result.stderr
+    config = json.loads((tmp / "out" / "config.json").read_text())
+    assert len(config["corpus"]) == 64
+    assert config["judge"] == {"model": "gpt-4o", "quant": "bf16", "revision": None}
+    assert evaluate_cli(corpus, out="out2").returncode == 0
+    assert json.loads((tmp / "out2" / "config.json").read_text())["corpus"] == config["corpus"]
