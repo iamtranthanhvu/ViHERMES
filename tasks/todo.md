@@ -67,12 +67,12 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 5: Model local: `base_url`, `extra_body`, `--conductor-model`, `--no-thinking`
 **Description:** `OpenAILanguageModel` nhận `base_url` và `extra_body`; thêm `--base-url`, `--judge-base-url`, `--conductor-model`, `--no-thinking`. Tách LLM của Conductor khỏi Interpreter/Auditor trong `conductor()`. `SentenceEmbedder` nhận `max_seq_length`.
 **Acceptance criteria:**
-- [ ] Không truyền cờ mới: hành vi và test cũ không đổi.
-- [ ] Test với server HTTP giả (mẫu có sẵn trong `tests/test_adapters.py`): request đến đúng `base_url`, body có `chat_template_kwargs.enable_thinking=false` khi bật.
-- [ ] Generator và judge dùng hai `base_url` khác nhau trong cùng một lần chạy `evaluate`.
-- [ ] Conductor dùng `--conductor-model`; Interpreter và Auditor dùng `--model`.
+- [x] Không truyền cờ mới: hành vi và test cũ không đổi.
+- [x] Test với server HTTP giả (mẫu có sẵn trong `tests/test_adapters.py`): request đến đúng `base_url`, body có `chat_template_kwargs.enable_thinking=false` khi bật.
+- [x] Generator và judge dùng hai `base_url` khác nhau trong cùng một lần chạy `evaluate`.
+- [x] Conductor dùng `--conductor-model`; Interpreter và Auditor dùng `--model`.
 **Verification:**
-- [ ] `pytest -q tests/test_adapters.py tests/test_cli.py tests/test_agents.py`
+- [x] `pytest -q tests/test_adapters.py tests/test_cli.py tests/test_agents.py`
 **Dependencies:** None
 **Files likely touched:** `src/vihermes/adapters/models.py`, `src/vihermes/cli.py`, `tests/test_adapters.py`, `tests/test_cli.py`
 **Estimated scope:** Medium (4 files)

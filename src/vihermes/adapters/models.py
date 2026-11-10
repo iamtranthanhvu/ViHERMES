@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 
 import numpy as np
 
@@ -40,23 +41,45 @@ class OpenAIEmbedder:
 
 
 class SentenceEmbedder:
-    def __init__(self, model, batch_size=32):
+    def __init__(self, model, batch_size=32, max_seq_length=None):
         from sentence_transformers import SentenceTransformer
 
         self.model = SentenceTransformer(model)
         self.identity, self.batch_size = "sentence-transformers:" + model, batch_size
+        if max_seq_length:
+            # Truncation changes the vectors, so it must change the index identity too.
+            self.model.max_seq_length = max_seq_length
+            self.identity += f":max{max_seq_length}"
 
     def encode(self, texts):
         return self.model.encode(texts, batch_size=self.batch_size, normalize_embeddings=True)
 
 
+NO_THINKING = {"chat_template_kwargs": {"enable_thinking": False}}
+
+
 class OpenAILanguageModel:
-    def __init__(self, model="gpt-4o-mini", temperature=0):
+    """Chat model behind any OpenAI-compatible endpoint (OpenAI, vLLM, ...).
+
+    ``base_url`` points one instance at its own server, so a generator and a judge can run on
+    different servers in one process. ``extra_body`` carries server-specific request fields such
+    as ``NO_THINKING``.
+    """
+
+    def __init__(self, model="gpt-4o-mini", temperature=0, base_url=None, extra_body=None):
         from openai import OpenAI
 
-        self.client, self.model, self.temperature = OpenAI(), model, temperature
+        if base_url:
+            # Local servers usually ignore the key, but the SDK refuses to start without one.
+            self.client = OpenAI(
+                base_url=base_url, api_key=os.environ.get("OPENAI_API_KEY") or "EMPTY"
+            )
+        else:
+            self.client = OpenAI()
+        self.model, self.temperature, self.extra_body = model, temperature, extra_body
 
     def json(self, system, payload):
+        options = {"extra_body": self.extra_body} if self.extra_body else {}
         response = self.client.chat.completions.create(
             model=self.model,
             temperature=self.temperature,
@@ -65,6 +88,7 @@ class OpenAILanguageModel:
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
+            **options,
         )
         result = json.loads(response.choices[0].message.content or "{}")
         if not isinstance(result, dict):

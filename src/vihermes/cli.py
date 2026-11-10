@@ -31,7 +31,7 @@ def embedder(args):
         return OpenAIEmbedder(args.embedding_model or "text-embedding-3-small")
     if not args.embedding_model:
         raise ValueError("--embedding-model is required for sentence-transformers")
-    return SentenceEmbedder(args.embedding_model)
+    return SentenceEmbedder(args.embedding_model, max_seq_length=args.max_seq_length)
 
 
 def graph(args, stack):
@@ -77,11 +77,26 @@ def pipeline(args, store, stack):
     return pathfinder
 
 
-def conductor(args, pathfinder):
-    from .adapters.models import OpenAILanguageModel
+def language_model(model, base_url, no_thinking):
+    from .adapters.models import NO_THINKING, OpenAILanguageModel
 
-    llm = OpenAILanguageModel(args.model) if args.generator == "openai" else None
-    return Conductor(Interpreter(llm), pathfinder, Auditor(llm), llm)
+    return OpenAILanguageModel(
+        model, base_url=base_url, extra_body=NO_THINKING if no_thinking else None
+    )
+
+
+def conductor(args, pathfinder):
+    if args.generator != "openai":
+        return Conductor(Interpreter(None), pathfinder, Auditor(None), None)
+    llm = language_model(args.model, args.base_url, args.no_thinking)
+    # The Conductor may use a different model (e.g. a LoRA adapter served by the same endpoint);
+    # the Interpreter and Auditor keep the base model.
+    writer = (
+        language_model(args.conductor_model, args.base_url, args.no_thinking)
+        if args.conductor_model
+        else llm
+    )
+    return Conductor(Interpreter(llm), pathfinder, Auditor(llm), writer)
 
 
 def parser():
@@ -97,6 +112,7 @@ def parser():
                 "--embedding", choices=["openai", "sentence-transformers", "hash"], default="openai"
             )
             command.add_argument("--embedding-model")
+            command.add_argument("--max-seq-length", type=int)
             command.add_argument("--index", default="outputs/dense.npz")
             command.add_argument("--vector", choices=["numpy", "milvus"], default="numpy")
         if name in ("retrieve", "ask", "evaluate"):
@@ -107,6 +123,14 @@ def parser():
             command.add_argument("--max-chars", type=int, default=16000)
         if name in ("ask", "evaluate", "construct"):
             command.add_argument("--model", default="gpt-4o-mini")
+            command.add_argument("--base-url", help="OpenAI-compatible endpoint for --model")
+            command.add_argument(
+                "--no-thinking", action="store_true", help="disable reasoning mode (vLLM/Qwen)"
+            )
+        if name in ("ask", "evaluate"):
+            command.add_argument(
+                "--conductor-model", help="model for the Conductor only (default: --model)"
+            )
         if name in ("ask", "evaluate"):
             command.add_argument("--generator", choices=["openai", "extractive"], default="openai")
         if name == "ingest":
@@ -125,6 +149,9 @@ def parser():
             command.add_argument("--answers", action="store_true")
             command.add_argument("--judge", action="store_true")
             command.add_argument("--judge-model", default="gpt-4o")
+            command.add_argument(
+                "--judge-base-url", help="OpenAI-compatible endpoint for the judge"
+            )
             command.add_argument("--ks", default="1,5,10")
         elif name == "construct":
             command.add_argument("--output", required=True)
@@ -219,13 +246,12 @@ def run(args):
             index = dense_index(args, store, stack)
             return {"units": len(index.ids), "vector": args.vector, "embedding": args.embedding}
         if args.command == "construct":
-            from .adapters.models import OpenAILanguageModel
             from .construction import construct
 
             return construct(
                 units(store),
                 embedder(args),
-                OpenAILanguageModel(args.model),
+                language_model(args.model, args.base_url, args.no_thinking),
                 args.output,
                 tuple(int(h) for h in args.hops.split(",")),
                 args.per_hop,
@@ -261,8 +287,6 @@ def run(args):
             raise ValueError("All recall cutoffs must be positive")
         if args.judge and not args.answers:
             raise ValueError("--judge requires --answers")
-        from .adapters.models import OpenAILanguageModel
-
         config = vars(args).copy()
         config.update(split_file=args.split, split=split_info, environment=run_environment())
         Path(args.output).mkdir(parents=True, exist_ok=True)
@@ -272,7 +296,9 @@ def run(args):
             pathfinder,
             args.output,
             conductor(args, pathfinder) if args.answers else None,
-            OpenAILanguageModel(args.judge_model) if args.judge else None,
+            language_model(args.judge_model, args.judge_base_url, args.no_thinking)
+            if args.judge
+            else None,
             ks,
             resume=args.resume,
             metadata={"split": split_info},

@@ -45,7 +45,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 - [x] T2: Chạy split trên dataset thật, review thống kê, chốt `configs/split.json`
 - [x] T3: Kiểm tra ánh xạ `evidence` ↔ `used_context_ids` trên dữ liệu thật (chỉ đọc)
 - [x] T4: `evaluate` theo split (`--split --part test`, `--resume`, ghi config/timing)
-- [ ] T5: Model local: `base_url`, `extra_body`, `--conductor-model`, `--no-thinking`
+- [x] T5: Model local: `base_url`, `extra_body`, `--conductor-model`, `--no-thinking`
 
 ### Checkpoint A: nền tảng đánh giá
 - [ ] T6: Extra `train` + `hub.py` (publish/fetch ghim revision)
