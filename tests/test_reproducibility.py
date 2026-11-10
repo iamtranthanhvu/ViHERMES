@@ -69,3 +69,26 @@ def test_the_makefile_exports_a_fixed_hash_seed(tmp_path):
     )  # fmt: skip
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "0"
+
+
+# Top-5 passages (as sets) of the 10 test questions of the fixture, recorded on baseline/1-local
+# with the deterministic B1 settings above. Every later branch must still retrieve exactly these
+# when none of its new flags is used. Regenerate only if the retrieval code changes on purpose.
+B1_TOP5 = [
+    ["0006-fix-0042", "0066-fix-0462", "0124-fix-0868", "0207-fix-1449", "0305-fix-2135"],
+    ["0006-fix-0042", "0031-fix-0217", "0066-fix-0462", "0244-fix-1708", "0305-fix-2135"],
+    ["0048-fix-0336", "0244-fix-1708", "0278-fix-1946", "0301-fix-2107", "0316-fix-2212"],
+    ["0050-fix-0350", "0244-fix-1708", "0278-fix-1946", "0301-fix-2107", "0373-fix-2611"],
+    ["0041-fix-0287", "0046-fix-0322", "0229-fix-1603", "0244-fix-1708", "0278-fix-1946"],
+    ["0104-fix-0728", "0244-fix-1708", "0280-fix-1960", "0301-fix-2107", "0308-fix-2156"],
+    ["0035-fix-0245", "0045-fix-0315", "0102-fix-0714", "0243-fix-1701", "0347-fix-2429"],
+    ["0059-fix-0413", "0099-fix-0693", "0249-fix-1743", "0300-fix-2100", "0313-fix-2191"],
+    ["0011-fix-0077", "0018-fix-0126", "0059-fix-0413", "0189-fix-1323", "0310-fix-2170"],
+    ["0102-fix-0714", "0133-fix-0931", "0183-fix-1281", "0200-fix-1400", "0374-fix-2618"],
+]
+
+
+def test_the_default_pipeline_still_retrieves_what_baseline_1_retrieved(tmp_path):
+    rows, metrics = run_b1(tmp_path, "regression", {"PYTHONHASHSEED": "0"})
+    assert metrics["recall@5"] == 1.0
+    assert [sorted(r["retrieved_ids"]) for r in rows] == B1_TOP5

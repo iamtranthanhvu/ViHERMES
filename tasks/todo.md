@@ -236,11 +236,11 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 16: Merge nhánh 2 + 3, giải quyết xung đột
 **Description:** Từ `baseline/1-local`, merge `baseline/2-embed` và `baseline/3-lora`. Xung đột dự kiến ở `cli.py`, `docs/baselines.md`; giữ cả hai tập cờ.
 **Acceptance criteria:**
-- [ ] `pytest -q` và `ruff check src tests` sạch sau merge.
-- [ ] Không đổi ngữ nghĩa các cờ đã có.
-- [ ] Chạy không bật cờ nào cho kết quả giống `baseline/1-local` (test hồi quy trên fixture).
+- [x] `pytest -q` và `ruff check src tests` sạch sau merge.
+- [x] Không đổi ngữ nghĩa các cờ đã có.
+- [x] Chạy không bật cờ nào cho kết quả giống `baseline/1-local` (test hồi quy trên fixture).
 **Verification:**
-- [ ] `pytest -q`; `ruff check src tests`; `make dryrun` (B1) vẫn qua
+- [x] `pytest -q`; `ruff check src tests`; `make dryrun` (B1) vẫn qua
 **Dependencies:** Task 12, 15
 **Files likely touched:** `src/vihermes/cli.py`, `docs/baselines.md` (xung đột)
 **Estimated scope:** Small

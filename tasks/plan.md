@@ -68,7 +68,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 ### Checkpoint C: B2 và B3 chạy xong trên H2, H3; model nằm trên HF
 
 ### Phase 4 — `baseline/4-all` (B4)
-- [ ] T16: Merge nhánh 2 + 3, giải quyết xung đột
+- [x] T16: Merge nhánh 2 + 3, giải quyết xung đột
 - [ ] T17: `make b4` (fetch) + dryrun đầy đủ + hoàn thiện docs
 
 ### Checkpoint D: chạy H4, gộp 4 gói số liệu bằng `make compare` thành bảng cuối
