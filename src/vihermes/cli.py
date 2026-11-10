@@ -192,6 +192,22 @@ def parser():
     comp.add_argument("reports", nargs="+")
     comp.add_argument("--output-dir", default="outputs/compare")
     comp.add_argument("--baseline", default="b1")
+    ft = sub.add_parser("finetune-embed", help="fine-tune the embedding model on train pairs")
+    ft.add_argument("--data", required=True, help="JSONL from make-embed-data")
+    ft.add_argument("--qa", required=True)
+    ft.add_argument("--split", required=True)
+    ft.add_argument("--db", default="outputs/vihermes.db")
+    ft.add_argument("--base", default="BAAI/bge-m3")
+    ft.add_argument("--revision")
+    ft.add_argument("--output", required=True)
+    ft.add_argument("--epochs", type=int, default=1)
+    ft.add_argument("--lr", type=float, default=1e-5)
+    ft.add_argument("--batch-size", type=int, default=16)
+    ft.add_argument("--max-seq-length", type=int, default=512)
+    ft.add_argument("--max-steps", type=int, default=-1)
+    ft.add_argument("--negatives", type=int, default=3)
+    ft.add_argument("--seed", type=int, default=42)
+    ft.add_argument("--gradient-checkpointing", action="store_true")
     publish = sub.add_parser("publish", help="upload a model folder to a private HF repo")
     publish.add_argument("--path", required=True)
     publish.add_argument("--repo", required=True)
@@ -252,6 +268,28 @@ def run(args):
         return demo(args.output)
     if args.command == "extract-contexts":
         return {"contexts": extract_contexts(args.qa, args.output)}
+    if args.command == "finetune-embed":
+        from .graph import SQLiteGraph
+        from .splits import load_split
+        from .training.embed import train_embedding
+
+        split = load_split(args.split)
+        by_id = {e.id: e for e in load_qa(args.qa)}
+        rows = [
+            json.loads(line) for line in Path(args.data).read_text("utf-8").splitlines() if line
+        ]
+        test_gold = {c for i in split["test"] for c in by_id[i].gold_context_ids}
+        dev = [(by_id[i].question, by_id[i].gold_context_ids) for i in split["dev"]]
+        with SQLiteGraph(args.db) as store:
+            corpus = {n.id: n.text for n in units(store)}
+        return train_embedding(
+            rows, dev, corpus, args.output, base=args.base, revision=args.revision,
+            epochs=args.epochs, lr=args.lr, batch_size=args.batch_size,
+            max_seq_length=args.max_seq_length, max_steps=args.max_steps,
+            negatives=args.negatives, seed=args.seed, forbidden=test_gold,
+            gradient_checkpointing=args.gradient_checkpointing,
+            meta={"split_hash": split["hash"], "split_file": args.split},
+        )  # fmt: skip
     if args.command == "pack":
         from .report import pack
 

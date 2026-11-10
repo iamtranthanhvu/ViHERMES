@@ -163,11 +163,11 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 11: Huấn luyện `bge-m3`
 **Description:** `training/embed.py`: `sentence-transformers` + `MultipleNegativesRankingLoss`, chọn checkpoint theo Recall@5 trên dev, lưu model và `train_meta.json` (seed, hash split, số cặp, siêu tham số, thời gian, loss, VRAM đỉnh). Lệnh `vihermes finetune-embed`.
 **Acceptance criteria:**
-- [ ] Smoke test `--max-steps 2` với model rất nhỏ chạy xong, lưu model và `train_meta.json`.
-- [ ] Không dùng test ở bất kỳ bước nào (kiểm bằng test chặn truy cập id test).
-- [ ] Thư viện nặng chỉ import trong hàm.
+- [x] Smoke test `--max-steps 2` với model rất nhỏ chạy xong, lưu model và `train_meta.json`.
+- [x] Không dùng test ở bất kỳ bước nào (kiểm bằng test chặn truy cập id test).
+- [x] Thư viện nặng chỉ import trong hàm.
 **Verification:**
-- [ ] `pytest -q tests/test_embed_train.py` (bỏ qua nếu chưa cài extra `train`, qua `importorskip`)
+- [x] `pytest -q tests/test_embed_train.py` (bỏ qua nếu chưa cài extra `train`, qua `importorskip`)
 **Dependencies:** Task 6, 10
 **Files likely touched:** `src/vihermes/training/embed.py`, `src/vihermes/cli.py`, `tests/test_embed_train.py`
 **Estimated scope:** Small (3 files)
