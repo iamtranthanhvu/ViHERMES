@@ -47,7 +47,7 @@ Corpus nạp từ `contexts.csv` cho `0 edges` (không có đồ thị); điều
 
 | # | Hạng mục | Nội dung | Nhánh |
 |---|---|---|---|
-| W1 | Split + đánh giá | Chia train/dev/test chống rò rỉ; `evaluate` theo split; xuất bảng đúng định dạng paper | `baseline/1-local` |
+| W1 | Split + đánh giá | Chia train/validation/test chống rò rỉ; `evaluate` theo split; xuất bảng đúng định dạng paper | `baseline/1-local` |
 | W2 | Model local (B1) | `base_url` riêng cho judge, tắt thinking, `--conductor-model`, cấu hình bge-m3 | `baseline/1-local` |
 | W3 | Fine-tune embedding (B2) | Dữ liệu (câu hỏi, đoạn vàng, hard negative) và fine-tune `bge-m3` | `baseline/2-embed` |
 | W4 | LoRA Conductor (B3) | Dữ liệu từ `evidence` có sẵn và LoRA `Qwen3.5-4B` | `baseline/3-lora` |
@@ -65,8 +65,8 @@ main                      paper gốc, không đụng
 
 ### W1 chi tiết: split và tập đánh giá
 
-- Mỗi đoạn ngữ cảnh là bằng chứng của ~4–5 câu hỏi, nên chia ngẫu nhiên theo câu sẽ rò rỉ. Dùng **"test trước, cách ly sau"**: chọn câu test phân tầng theo hop, gom đoạn vàng của chúng, **loại khỏi train mọi câu khác chạm vào các đoạn đó** (`quarantined`), phần còn lại chia train/dev. Mức mất dữ liệu chưa đo; `vihermes split` in thống kê.
-- **Đã chốt (sau khi đo trên dữ liệu thật):** test đúng **100 câu** (20 mỗi hop), cách ly chặt; `dev` = 12% phần sạch còn lại; seed 42. Kết quả thật: train 744, dev 100, test 100, quarantined 617 (39,5%), không rò rỉ. Test 311 câu sẽ cách ly 60% và chỉ còn 168 câu train, nên không dùng. Lưu `configs/split.json` kèm hash; cả 4 baseline dùng chung.
+- Mỗi đoạn ngữ cảnh là bằng chứng của ~4–5 câu hỏi, nên chia ngẫu nhiên theo câu sẽ rò rỉ. Dùng **"test trước, cách ly sau"**: chọn câu test phân tầng theo hop, gom đoạn vàng của chúng, **loại khỏi train mọi câu khác chạm vào các đoạn đó** (`quarantined`), phần còn lại chia train/validation. Mức mất dữ liệu chưa đo; `vihermes split` in thống kê.
+- **Đã chốt (sau khi đo trên dữ liệu thật):** test đúng **100 câu** (20 mỗi hop), cách ly chặt; `validation` = 12% phần sạch còn lại; seed 42. Kết quả thật: train 744, validation 100, test 100, quarantined 617 (39,5%), không rò rỉ. Test 311 câu sẽ cách ly 60% và chỉ còn 168 câu train, nên không dùng. Lưu `configs/split.json` kèm hash; cả 4 baseline dùng chung.
 - **Tập báo cáo = chính tập `test` (100 câu, 20 câu mỗi hop), cố định theo seed.** Không dùng `--limit` vì dataset sắp xếp theo khối hop (sẽ chỉ lấy hop 1).
 - Cả ba chỉ số của bảng (F1, LLM Judge, Recall@5) tính trên cùng 100 câu này. Với 100 câu, sai số khoảng ±10 điểm % ở mức tổng, ±22 điểm % mỗi hop; chênh lệch nhỏ giữa các dòng có thể chỉ là nhiễu và phải ghi chú.
 - Chỉ số: dùng nguyên `evaluation.py` hiện có (`recall@5`, `f1`, `judge`). Không thêm chỉ số.
@@ -82,12 +82,12 @@ main                      paper gốc, không đụng
 ### W3 chi tiết (B2)
 
 - Dữ liệu: câu train; cặp dương là (câu hỏi, từng đoạn vàng); âm tính khó lấy từ top-30 của retriever B1, bỏ mọi đoạn vàng của câu đó, chọn 3.
-- Huấn luyện: `sentence-transformers`, `MultipleNegativesRankingLoss`, lr 1e-5, 1–2 epoch, `max_seq_length=512`. Chọn checkpoint theo Recall@5 trên dev. Build index riêng (`dense-b2.npz`).
+- Huấn luyện: `sentence-transformers`, `MultipleNegativesRankingLoss`, lr 1e-5, 1–2 epoch, `max_seq_length=512`. Chọn checkpoint theo Recall@5 trên validation. Build index riêng (`dense-b2.npz`).
 
 ### W4 chi tiết (B3)
 
 - Mẫu = một lần gọi Conductor đúng định dạng lúc suy luận (`GENERATE`, `serialize_evidence` import từ `agents.py`); đích là JSON `{claims:[{text, citations, quotes}], abstain}`; `text` = `answer`, `quotes` lấy từ trường `evidence` của dataset, **phải thỏa `quote in node.text`**, mẫu không thỏa bị loại. Khoảng 15% mẫu abstain (bỏ đoạn vàng khỏi evidence).
-- LoRA `peft` + `trl`, r=16, loss chỉ trên phần assistant. **GPU 48GB: LoRA bf16 (không cần QLoRA)**, bật gradient checkpointing, `max_seq_length` 4096–8192. Chọn checkpoint theo eval loss trên dev.
+- LoRA `peft` + `trl`, r=16, loss chỉ trên phần assistant. **GPU 48GB: LoRA bf16 (không cần QLoRA)**, bật gradient checkpointing, `max_seq_length` 4096–8192. Chọn checkpoint theo eval loss trên validation.
 - Phục vụ: `vllm serve Qwen/Qwen3.5-4B --enable-lora --lora-modules conductor=<path>`; `--conductor-model conductor`. Interpreter và Auditor vẫn dùng 4B gốc.
 
 ### W5 chi tiết (B4)
@@ -115,12 +115,12 @@ Mọi số liệu ghi tự động vào `outputs/`, không phải chép tay. Kh�
 
 | Artifact | Nội dung | Ghi bởi |
 |---|---|---|
-| `configs/split.json` | seed, tỉ lệ, số câu train/dev/test/quarantined (tổng và theo hop), số đoạn mỗi phần, hash (commit vào repo) | `split` |
+| `configs/split.json` | seed, tỉ lệ, số câu train/validation/test/quarantined (tổng và theo hop), số đoạn mỗi phần, hash (commit vào repo) | `split` |
 | `outputs/<b>/metrics.json` | F1, LLM Judge, Recall@5: tổng và theo hop 1–5, kèm số câu `n` | `evaluate` |
 | `outputs/<b>/predictions.jsonl` | từng câu: câu trả lời, `retrieved_ids`, điểm từng câu, thời gian | `evaluate` |
 | `outputs/<b>/config.json` | mọi cờ chạy, id model, `base_url`, embedding/index, hash split, git commit, phiên bản `vllm`/`torch`/`transformers`/`sentence-transformers`/`peft`/`trl`, tên GPU và VRAM | `evaluate` |
 | `outputs/<b>/timing.json` | thời gian build index, đánh giá, tổng | `evaluate`/`index` |
-| `outputs/embed-ft/train_meta.json`, `outputs/lora-conductor/train_meta.json` | seed, hash split, số mẫu (và số mẫu bị loại), siêu tham số, thời gian huấn luyện, loss train/dev theo bước, VRAM đỉnh | `finetune-*` |
+| `outputs/embed-ft/train_meta.json`, `outputs/lora-conductor/train_meta.json` | seed, hash split, số mẫu (và số mẫu bị loại), siêu tham số, thời gian huấn luyện, loss train/validation theo bước, VRAM đỉnh | `finetune-*` |
 | `outputs/compare/table.md`, `outputs/compare/results.json` | bảng cuối (B1–B4 kèm mức chênh so với B1) và số thô để vẽ lại | `compare` |
 | `outputs/report-bN.tar.gz` | gói số liệu của mỗi host (metrics, predictions, config, timing, train_meta; không có trọng số, DB, log lớn) để `scp` về máy | `make report` |
 
@@ -187,7 +187,7 @@ Giữ phong cách hiện có: type hint `X | None`, dependency injection qua `po
 ## 7. Testing strategy
 
 - `pytest` offline với encoder `hash` và LLM giả; không cần GPU hay API.
-- Chống rò rỉ: không đoạn vàng của câu test nào nằm trong gold của train hoặc dev.
+- Chống rò rỉ: không đoạn vàng của câu test nào nằm trong gold của train hoặc validation.
 - Split tái lập theo seed, đủ hop 1–5, mỗi câu thuộc đúng một phần.
 - Chỉ số hiện có không đổi kết quả khi chạy không kèm `--split`.
 - Dữ liệu LoRA: mọi `quote in node.text`; prompt hệ thống bằng đúng `agents.GENERATE`.
@@ -217,7 +217,7 @@ Giữ phong cách hiện có: type hint `X | None`, dependency injection qua `po
 0. ~~Một nhánh gộp hay từng nhánh~~ **Đã chốt: 4 host, mỗi host một nhánh** (H1 `baseline/1-local`, H2 `baseline/2-embed`, H3 `baseline/3-lora`, H4 `baseline/4-all`). Model chuyển qua Hugging Face Hub private: bạn có tài khoản/token HF và đồng ý dùng repo private không?
 
 1. Tên chính xác model judge (`Qwen/Qwen3.5-9B`?) và vLLM đã hỗ trợ Qwen3.5 chưa; cách tắt thinking.
-2. ~~Mức mất dữ liệu do cách ly~~ **Đã chốt:** 39,5% (617 câu) với test 100 câu; còn train 744 và dev 100. Tăng số câu test về sau sẽ làm train giảm mạnh (test 200 câu: còn ~390 câu sạch).
+2. ~~Mức mất dữ liệu do cách ly~~ **Đã chốt:** 39,5% (617 câu) với test 100 câu; còn train 744 và validation 100. Tăng số câu test về sau sẽ làm train giảm mạnh (test 200 câu: còn ~390 câu sạch).
 3. ~~Map khóa `evidence`~~ **Đã kiểm tra (T3):** ánh xạ theo vị trí đúng, nhưng chỉ 13,8% bản ghi có `evidence` là trích dẫn nguyên văn; phần còn lại là câu tóm tắt. Dữ liệu LoRA cắt quote trực tiếp từ đoạn vàng theo độ trùng từ với câu trả lời tham chiếu.
 4. PEFT/TRL và `--enable-lora` của vLLM có hỗ trợ kiến trúc Qwen3.5 không.
 5. ~~GPU cho LoRA~~ **Đã chốt: 48GB** (LoRA bf16). Lưu ý khi đánh giá: Qwen3.5-4B + adapter (~9GB) và judge Qwen3.5-9B (~19GB bf16) chạy cùng lúc trên 48GB rất sát KV cache; cần chọn giữa lượng tử hóa judge (AWQ/FP8), hạ `--max-model-len`, hoặc chạy hai lượt (sinh câu trả lời trước, chấm điểm sau).

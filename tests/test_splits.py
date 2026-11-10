@@ -24,7 +24,7 @@ def synthetic(per_hop=150, pool=3000, seed=0):
 
 
 def parts(split):
-    return {name: set(split[name]) for name in ("train", "dev", "test", "quarantined")}
+    return {name: set(split[name]) for name in ("train", "validation", "test", "quarantined")}
 
 
 def test_split_is_deterministic_and_seed_sensitive():
@@ -46,12 +46,12 @@ def test_every_question_in_exactly_one_part():
             assert not p[left] & p[right]
 
 
-def test_no_test_gold_context_leaks_into_train_or_dev():
+def test_no_test_gold_context_leaks_into_train_or_validation():
     examples = synthetic()
     by_id = {e.id: e for e in examples}
     split = make_split(examples)
     test_gold = {c for i in split["test"] for c in by_id[i].gold_context_ids}
-    for name in ("train", "dev"):
+    for name in ("train", "validation"):
         used = {c for i in split[name] for c in by_id[i].gold_context_ids}
         assert not used & test_gold, name
     assert split["stats"]["leaked_contexts"] == 0
@@ -83,20 +83,20 @@ def test_test_size_is_configurable():
 def test_small_hop_group_keeps_questions_for_training():
     split = make_split(synthetic(per_hop=12))
     assert len(split["test"]) == 5 * 6
-    assert split["train"] or split["dev"]
+    assert split["train"] or split["validation"]
 
 
-def test_dev_is_stratified_and_not_empty():
+def test_validation_is_stratified_and_not_empty():
     split = make_split(synthetic())
-    assert split["stats"]["by_hop"]["dev"]["3"] > 0
-    assert split["dev"] and split["train"]
+    assert split["stats"]["by_hop"]["validation"]["3"] > 0
+    assert split["validation"] and split["train"]
 
 
 def test_invalid_ratios_rejected():
     with pytest.raises(ValueError):
         make_split(synthetic(), test_size=0)
     with pytest.raises(ValueError):
-        make_split(synthetic(), dev=1.0)
+        make_split(synthetic(), validation=1.0)
 
 
 def test_save_and_load_roundtrip(tmp_path):
