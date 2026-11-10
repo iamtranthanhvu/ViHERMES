@@ -189,15 +189,15 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ## Phase 3: `baseline/3-lora` (B3)
 
 ### Task 13: Dữ liệu LoRA cho Conductor
-**Description:** `training/lora_data.py`: mỗi mẫu là một lần gọi Conductor đúng định dạng suy luận (import `GENERATE` và `serialize_evidence` từ `agents.py`), đích là JSON `{claims, abstain}`. Vì Task 3 cho thấy `evidence` chủ yếu là câu tóm tắt, **quote được cắt trực tiếp từ đoạn vàng**: ưu tiên `evidence` nếu nó là chuỗi con nguyên văn; nếu không, chọn cửa sổ văn bản (câu hoặc cụm ≤ ~300 ký tự) có độ trùng từ cao nhất với câu trả lời tham chiếu và phần tóm tắt, lấy nguyên văn theo vị trí ký tự nên luôn thỏa `quote in node.text`. ~15% mẫu abstain (bỏ đoạn vàng khỏi evidence). Mẫu không chọn được quote đủ trùng bị loại và đếm lại. Lệnh `vihermes make-lora-data`.
+**Description:** `training/lora_data.py`: mỗi mẫu là một lần gọi Conductor đúng định dạng suy luận (import `GENERATE` và `serialize_evidence` từ `agents.py`), đích là JSON `{claims, abstain}`. Vì Task 3 cho thấy `evidence` chủ yếu là câu tóm tắt, **quote được cắt trực tiếp từ đoạn vàng**: ưu tiên `evidence` nếu nó là chuỗi con nguyên văn; nếu không, chọn cửa sổ văn bản (câu hoặc cụm ≤ ~300 ký tự) có độ trùng từ cao nhất với câu trả lời tham chiếu và phần tóm tắt, lấy nguyên văn theo vị trí ký tự nên luôn thỏa `quote in node.text`. ~15% mẫu abstain (bỏ đoạn vàng khỏi evidence). Mẫu không chọn được quote đủ trùng bị loại và đếm lại. Câu mà truy xuất chưa đủ đoạn vàng vừa cho một mẫu abstain (bằng chứng như đã truy xuất) vừa cho một mẫu trả lời trong đó đoạn vàng thiếu được chèn thay cho đoạn xếp hạng thấp nhất (giữ nguyên số đoạn); tắt bằng `--no-inject-gold`. **Kết quả thật (BM25, k=5):** train 868 mẫu (738 trả lời, 130 abstain), dev 118; không mẫu nào bị loại vì thiếu quote; 6 mẫu quá dài (>24.000 ký tự). Lệnh `vihermes make-lora-data`.
 **Acceptance criteria:**
-- [ ] Mọi mẫu `abstain=false` có mọi quote là chuỗi con của đoạn được cite (dùng đúng điều kiện của Auditor).
-- [ ] Không mẫu nào chứa câu hỏi hoặc đoạn vàng của test/quarantined.
-- [ ] Mẫu abstain không chứa đoạn vàng trong evidence.
-- [ ] System prompt trong dữ liệu bằng đúng `agents.GENERATE`.
-- [ ] In số mẫu giữ/loại.
+- [x] Mọi mẫu `abstain=false` có mọi quote là chuỗi con của đoạn được cite (dùng đúng điều kiện của Auditor).
+- [x] Không mẫu nào chứa câu hỏi hoặc đoạn vàng của test/quarantined.
+- [x] Mẫu abstain không chứa đoạn vàng trong evidence.
+- [x] System prompt trong dữ liệu bằng đúng `agents.GENERATE`.
+- [x] In số mẫu giữ/loại.
 **Verification:**
-- [ ] `pytest -q tests/test_lora_data.py`
+- [x] `pytest -q tests/test_lora_data.py`
 **Dependencies:** Phase 1, Task 3
 **Files likely touched:** `src/vihermes/training/lora_data.py`, `src/vihermes/cli.py`, `tests/test_lora_data.py`
 **Estimated scope:** Small (3 files)

@@ -61,7 +61,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 - [ ] T12: `make b2` (huấn luyện → publish → index → đánh giá)
 
 ### Phase 3 — `baseline/3-lora` (B3)
-- [ ] T13: Dữ liệu LoRA cho Conductor
+- [x] T13: Dữ liệu LoRA cho Conductor
 - [ ] T14: Huấn luyện LoRA `Qwen3.5-4B`
 - [ ] T15: `make b3` + chế độ `serve.sh lora`
 
