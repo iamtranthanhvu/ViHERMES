@@ -6,12 +6,12 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from vihermes.training.embed import dev_recall_at_k
+from vihermes.training.embed import validation_recall_at_k
 
 FIXTURE = Path(__file__).parent / "fixtures" / "dryrun" / "qa.jsonl"
 
 
-def test_dev_recall_at_k_scores_the_gold_passages_in_the_top_k():
+def test_validation_recall_at_k_scores_the_gold_passages_in_the_top_k():
     # query vectors point at their own passage; passage "c" is the decoy for both queries
     corpus = {"a": [1, 0, 0], "b": [0, 1, 0], "c": [0.6, 0.6, 0]}
     queries = {"q1": [1, 0, 0], "q2": [0, 1, 0]}
@@ -23,17 +23,17 @@ def test_dev_recall_at_k_scores_the_gold_passages_in_the_top_k():
         }
         return np.array([table[t] for t in texts], dtype=np.float32)
 
-    dev = [("ask-q1", ["a"]), ("ask-q2", ["b", "c"])]
+    validation = [("ask-q1", ["a"]), ("ask-q2", ["b", "c"])]
     texts = {k: f"text-{k}" for k in corpus}
-    assert dev_recall_at_k(encode, dev, texts, k=1) == pytest.approx((1.0 + 0.5) / 2)
-    assert dev_recall_at_k(encode, dev, texts, k=3) == 1.0
+    assert validation_recall_at_k(encode, validation, texts, k=1) == pytest.approx((1.0 + 0.5) / 2)
+    assert validation_recall_at_k(encode, validation, texts, k=3) == 1.0
 
 
-def test_dev_recall_ignores_questions_without_gold_passages():
+def test_validation_recall_ignores_questions_without_gold_passages():
     def encode(texts):
         return np.eye(len(texts), dtype=np.float32)
 
-    assert dev_recall_at_k(encode, [("q", [])], {"a": "x"}, k=1) is None
+    assert validation_recall_at_k(encode, [("q", [])], {"a": "x"}, k=1) is None
 
 
 def run_cli(*args):
@@ -73,7 +73,8 @@ def test_cli_finetune_embed_smoke_with_a_tiny_model(prepared, tiny_st_dir):
     assert meta["split_hash"] == split_hash and meta["seed"] == 42
     assert meta["steps"] == 2 and meta["pairs"] > 0
     assert (
-        meta["dev_recall_at_5"]["base"] is not None and meta["dev_recall_at_5"]["best"] is not None
+        meta["validation_recall_at_5"]["base"] is not None
+        and meta["validation_recall_at_5"]["best"] is not None
     )
     assert meta["seconds"] >= 0 and "packages" in meta
     assert (out / "model" / "modules.json").exists()

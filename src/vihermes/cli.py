@@ -168,7 +168,7 @@ def parser():
             command.add_argument("--output", required=True)
             command.add_argument("--limit", type=int)
             command.add_argument("--split", help="split JSON made by `vihermes split`")
-            command.add_argument("--part", choices=["train", "dev", "test"], default="test")
+            command.add_argument("--part", choices=["train", "validation", "test"], default="test")
             command.add_argument("--resume", action="store_true")
             command.add_argument("--answers", action="store_true")
             command.add_argument("--judge", action="store_true")
@@ -208,7 +208,7 @@ def parser():
     split.add_argument("--check", help="verify this split file against --qa instead of writing")
     split.add_argument("--seed", type=int, default=42)
     split.add_argument("--test-size", type=int, default=100)
-    split.add_argument("--dev", type=float, default=0.12)
+    split.add_argument("--validation", type=float, default=0.12)
     pack = sub.add_parser("pack", help="bundle one run's numbers into a report archive")
     pack.add_argument("--run", required=True)
     pack.add_argument("--name", required=True)
@@ -326,11 +326,11 @@ def run(args):
             json.loads(line) for line in Path(args.data).read_text("utf-8").splitlines() if line
         ]
         test_gold = {c for i in split["test"] for c in by_id[i].gold_context_ids}
-        dev = [(by_id[i].question, by_id[i].gold_context_ids) for i in split["dev"]]
+        validation = [(by_id[i].question, by_id[i].gold_context_ids) for i in split["validation"]]
         with SQLiteGraph(args.db) as store:
             corpus = {n.id: n.text for n in units(store)}
         return train_embedding(
-            rows, dev, corpus, args.output, base=args.base, revision=args.revision,
+            rows, validation, corpus, args.output, base=args.base, revision=args.revision,
             epochs=args.epochs, lr=args.lr, batch_size=args.batch_size,
             max_seq_length=args.max_seq_length, max_steps=args.max_steps,
             negatives=args.negatives, seed=args.seed, forbidden=test_gold,
@@ -384,7 +384,9 @@ def run(args):
         if args.check:
             stored = load_split(args.check)
             params = stored["params"]
-            fresh = make_split(load_qa(args.qa), stored["seed"], params["test_size"], params["dev"])
+            fresh = make_split(
+                load_qa(args.qa), stored["seed"], params["test_size"], params["validation"]
+            )
             if fresh["hash"] != stored["hash"]:
                 raise ValueError(
                     f"{args.check} does not match {args.qa}: the dataset or the split code changed"
@@ -392,7 +394,7 @@ def run(args):
             return {"matches": True, "hash": stored["hash"]}
         if not args.output:
             raise ValueError("--output is required unless --check is given")
-        split = make_split(load_qa(args.qa), args.seed, args.test_size, args.dev)
+        split = make_split(load_qa(args.qa), args.seed, args.test_size, args.validation)
         save_split(split, args.output)
         return {"output": str(args.output), "hash": split["hash"], **split["stats"]}
     if args.command == "audit-data":
