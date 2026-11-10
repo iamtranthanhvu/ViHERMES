@@ -66,8 +66,8 @@ main                      paper gốc, không đụng
 ### W1 chi tiết: split và tập đánh giá
 
 - Mỗi đoạn ngữ cảnh là bằng chứng của ~4–5 câu hỏi, nên chia ngẫu nhiên theo câu sẽ rò rỉ. Dùng **"test trước, cách ly sau"**: chọn câu test phân tầng theo hop, gom đoạn vàng của chúng, **loại khỏi train mọi câu khác chạm vào các đoạn đó** (`quarantined`), phần còn lại chia train/dev. Mức mất dữ liệu chưa đo; `vihermes split` in thống kê.
-- Tỉ lệ khởi điểm 70/10/20, seed 42, lưu `split.json` kèm hash; cả 4 baseline dùng chung.
-- **Tập báo cáo: 100 câu test phân tầng (20 câu mỗi hop), cố định theo seed**, lưu trong `split.json` (`test_100`). Không dùng `--limit` vì dataset sắp xếp theo khối hop (sẽ chỉ lấy hop 1).
+- **Đã chốt (sau khi đo trên dữ liệu thật):** test đúng **100 câu** (20 mỗi hop), cách ly chặt; `dev` = 12% phần sạch còn lại; seed 42. Kết quả thật: train 744, dev 100, test 100, quarantined 617 (39,5%), không rò rỉ. Test 311 câu sẽ cách ly 60% và chỉ còn 168 câu train, nên không dùng. Lưu `configs/split.json` kèm hash; cả 4 baseline dùng chung.
+- **Tập báo cáo = chính tập `test` (100 câu, 20 câu mỗi hop), cố định theo seed.** Không dùng `--limit` vì dataset sắp xếp theo khối hop (sẽ chỉ lấy hop 1).
 - Cả ba chỉ số của bảng (F1, LLM Judge, Recall@5) tính trên cùng 100 câu này. Với 100 câu, sai số khoảng ±10 điểm % ở mức tổng, ±22 điểm % mỗi hop; chênh lệch nhỏ giữa các dòng có thể chỉ là nhiễu và phải ghi chú.
 - Chỉ số: dùng nguyên `evaluation.py` hiện có (`recall@5`, `f1`, `judge`). Không thêm chỉ số.
 - Corpus retrieval vẫn là toàn bộ 998 đoạn.
@@ -100,7 +100,7 @@ main                      paper gốc, không đụng
 pytest -q && ruff check src tests
 
 vihermes split    --qa dataset/dataset.jsonl --output configs/split.json --seed 42   # chạy một lần, commit
-vihermes evaluate --qa dataset/dataset.jsonl --split configs/split.json --part test_100 \
+vihermes evaluate --qa dataset/dataset.jsonl --split configs/split.json --part test \
   --answers --judge --ks 5 --output outputs/<b1|b2|b3|b4>      # + cờ model theo từng baseline
 vihermes compare  report-b1.tar.gz report-b2.tar.gz report-b3.tar.gz report-b4.tar.gz > table.md
 ```
@@ -115,7 +115,7 @@ Mọi số liệu ghi tự động vào `outputs/`, không phải chép tay. Kh�
 
 | Artifact | Nội dung | Ghi bởi |
 |---|---|---|
-| `configs/split.json` | seed, tỉ lệ, số câu train/dev/test/quarantined (tổng và theo hop), số đoạn mỗi phần, hash, danh sách `test_100` (commit vào repo) | `split` |
+| `configs/split.json` | seed, tỉ lệ, số câu train/dev/test/quarantined (tổng và theo hop), số đoạn mỗi phần, hash (commit vào repo) | `split` |
 | `outputs/<b>/metrics.json` | F1, LLM Judge, Recall@5: tổng và theo hop 1–5, kèm số câu `n` | `evaluate` |
 | `outputs/<b>/predictions.jsonl` | từng câu: câu trả lời, `retrieved_ids`, điểm từng câu, thời gian | `evaluate` |
 | `outputs/<b>/config.json` | mọi cờ chạy, id model, `base_url`, embedding/index, hash split, git commit, phiên bản `vllm`/`torch`/`transformers`/`sentence-transformers`/`peft`/`trl`, tên GPU và VRAM | `evaluate` |
@@ -202,7 +202,7 @@ Giữ phong cách hiện có: type hint `X | None`, dependency injection qua `po
 ## 9. Success criteria
 
 1. `outputs/table.md` là **một bảng** có 4 dòng (B1–B4), 3 cột F1, LLM Judge, Recall@5; B1 là chỉ số gốc, các dòng còn lại kèm mức chênh so với B1.
-2. B1–B4 dùng cùng `split.json` và cùng 100 câu `test_100`.
+2. B1–B4 dùng cùng `split.json` và cùng 100 câu `test`.
 3. Test chống rò rỉ qua.
 4. B2 và B3 tái lập được từ lệnh trong `docs/baselines.md`; B4 không có bước huấn luyện.
 5. Dưới bảng có ghi chú về tập test giữ lại và sai số của 100 câu (mục 2).
@@ -217,7 +217,7 @@ Giữ phong cách hiện có: type hint `X | None`, dependency injection qua `po
 0. ~~Một nhánh gộp hay từng nhánh~~ **Đã chốt: 4 host, mỗi host một nhánh** (H1 `baseline/1-local`, H2 `baseline/2-embed`, H3 `baseline/3-lora`, H4 `baseline/4-all`). Model chuyển qua Hugging Face Hub private: bạn có tài khoản/token HF và đồng ý dùng repo private không?
 
 1. Tên chính xác model judge (`Qwen/Qwen3.5-9B`?) và vLLM đã hỗ trợ Qwen3.5 chưa; cách tắt thinking.
-2. Mức mất dữ liệu train do cách ly rò rỉ (cần đo bằng `vihermes split`); ngưỡng chấp nhận (đề xuất ≤ 30%).
+2. ~~Mức mất dữ liệu do cách ly~~ **Đã chốt:** 39,5% (617 câu) với test 100 câu; còn train 744 và dev 100. Tăng số câu test về sau sẽ làm train giảm mạnh (test 200 câu: còn ~390 câu sạch).
 3. Map khóa `evidence` (`context_1..n`) sang `used_context_ids` có đúng thứ tự không.
 4. PEFT/TRL và `--enable-lora` của vLLM có hỗ trợ kiến trúc Qwen3.5 không.
 5. ~~GPU cho LoRA~~ **Đã chốt: 48GB** (LoRA bf16). Lưu ý khi đánh giá: Qwen3.5-4B + adapter (~9GB) và judge Qwen3.5-9B (~19GB bf16) chạy cùng lúc trên 48GB rất sát KV cache; cần chọn giữa lượng tử hóa judge (AWQ/FP8), hạ `--max-model-len`, hoặc chạy hai lượt (sinh câu trả lời trước, chấm điểm sau).

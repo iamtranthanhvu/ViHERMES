@@ -8,12 +8,12 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ## Phase 1: `baseline/1-local`
 
 ### Task 1: Module chia split chống rò rỉ + lệnh `vihermes split`
-**Description:** Thêm `splits.py` với "test trước, cách ly sau": chọn câu test phân tầng theo hop, gom đoạn vàng, loại khỏi train/dev các câu chạm đoạn vàng của test (`quarantined`), chia phần còn lại train/dev. Chọn `test_100` (20 câu mỗi hop) từ test.
+**Description:** Thêm `splits.py` với "test trước, cách ly sau": chọn câu test phân tầng theo hop, gom đoạn vàng, loại khỏi train/dev các câu chạm đoạn vàng của test (`quarantined`), chia phần còn lại train/dev. `test` có đúng `test_size` câu (mặc định 100, 20 mỗi hop) và cũng là tập báo cáo; `dev` lấy 12% phần sạch.
 **Acceptance criteria:**
 - [x] Cùng seed cho cùng kết quả và cùng hash; khác seed cho kết quả khác.
 - [x] Mỗi câu thuộc đúng một trong `train/dev/test/quarantined`; tổng bằng số câu đầu vào.
 - [x] Không đoạn vàng nào của câu test xuất hiện trong gold của câu train hoặc dev.
-- [x] `test_100` có đúng 20 câu mỗi hop 1–5 và là tập con của `test`.
+- [x] `test` có đúng 100 câu, 20 mỗi hop 1–5 (không còn khóa `test_100`).
 - [x] `vihermes split` in thống kê: số câu từng phần theo hop, số bị cách ly (% tổng), số đoạn từng phần.
 **Verification:**
 - [x] `pytest -q tests/test_splits.py`
@@ -25,12 +25,12 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 2: Chạy split trên dataset thật, review, chốt `configs/split.json`
 **Description:** Chạy `vihermes split` trên `dataset/dataset.jsonl`, xem mức cách ly và kích thước train/dev thật. Đây là việc rủi ro, làm sớm để biết có cần đổi tỉ lệ trước khi xây thêm.
 **Acceptance criteria:**
-- [ ] `configs/split.json` được tạo; chạy lần hai cho cùng hash.
-- [ ] Báo cáo thống kê gửi người dùng; **người dùng quyết** ngưỡng cách ly và tỉ lệ (đề xuất ≤ 30%).
-- [ ] Chỉ commit `configs/split.json` sau khi người dùng đồng ý.
+- [x] `configs/split.json` được tạo; chạy lần hai cho cùng hash.
+- [x] Báo cáo thống kê gửi người dùng; **người dùng quyết**. Đã chốt: test đúng 100 câu, cách ly chặt (39,5%); train 744, dev 100.
+- [x] Chỉ commit `configs/split.json` sau khi người dùng đồng ý.
 **Verification:**
-- [ ] Chạy hai lần, so hash: `python -c "import json;print(json.load(open('configs/split.json'))['hash'])"`
-- [ ] `vihermes audit-data --qa dataset/dataset.jsonl` (so tổng 1.561)
+- [x] Chạy hai lần, so hash: `python -c "import json;print(json.load(open('configs/split.json'))['hash'])"`
+- [x] `vihermes audit-data --qa dataset/dataset.jsonl` (so tổng 1.561)
 **Dependencies:** Task 1
 **Files likely touched:** `configs/split.json`
 **Estimated scope:** XS (1 file)
@@ -50,7 +50,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 4: `evaluate` theo split (`--split`, `--part`, `--resume`) + ghi config/timing
 **Description:** Cho `evaluate` chạy trên một phần của `configs/split.json` (mặc định không dùng split: hành vi cũ). Thêm `--resume`. Ghi `config.json` đầy đủ (hash split, phiên bản thư viện, GPU, git commit) và `timing.json`. Chỉ số giữ nguyên: Recall@k (dùng `--ks 5`), F1, judge.
 **Acceptance criteria:**
-- [ ] `--split F --part test_100` chỉ đánh giá đúng các id đó.
+- [ ] `--split F --part test` chỉ đánh giá đúng các id đó.
 - [ ] Không có `--split`: kết quả giống hệt trước khi sửa (các test hiện có qua).
 - [ ] `--resume` bỏ qua id đã có trong `predictions.jsonl`; `metrics.json` tính trên toàn bộ.
 - [ ] `config.json` có hash split, tên model, `base_url`, phiên bản `vllm`/`torch`/`transformers` (nếu có), tên GPU (null nếu không), git commit.
@@ -123,7 +123,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 **Estimated scope:** Small (3 files)
 
 ### Task 9: Makefile `setup/smoke/b1/report/dryrun` + `docs/baselines.md`
-**Description:** `Makefile` dùng `include make/*.mk`; file `make/b1.mk`. `setup` (cài đặt, `extract-contexts`, `ingest`, kiểm hash split), `smoke` (đánh giá 5 câu, kiểm tra `content` không có khối suy luận và JSON hợp lệ), `b1` (index gốc → đánh giá `test_100` → `pack`), `dryrun` (toàn chuỗi offline với encoder `hash`, LLM giả, fixture nhỏ). Mỗi bước bỏ qua nếu đã có artifact.
+**Description:** `Makefile` dùng `include make/*.mk`; file `make/b1.mk`. `setup` (cài đặt, `extract-contexts`, `ingest`, kiểm hash split), `smoke` (đánh giá 5 câu, kiểm tra `content` không có khối suy luận và JSON hợp lệ), `b1` (index gốc → đánh giá `test` → `pack`), `dryrun` (toàn chuỗi offline với encoder `hash`, LLM giả, fixture nhỏ). Mỗi bước bỏ qua nếu đã có artifact.
 **Acceptance criteria:**
 - [ ] `make dryrun` chạy hết trên máy này không cần GPU/mạng và tạo `report-b1.tar.gz`.
 - [ ] Chạy `make dryrun` lần hai không làm lại bước đã xong.

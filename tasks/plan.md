@@ -42,9 +42,9 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 
 ### Phase 1 — `baseline/1-local` (B1 + nền tảng dùng chung)
 - [x] T1: Module chia split chống rò rỉ + lệnh `vihermes split`
-- [ ] T2: Chạy split trên dataset thật, review thống kê, chốt `configs/split.json`
+- [x] T2: Chạy split trên dataset thật, review thống kê, chốt `configs/split.json`
 - [ ] T3: Kiểm tra ánh xạ `evidence` ↔ `used_context_ids` trên dữ liệu thật (chỉ đọc)
-- [ ] T4: `evaluate` theo split (`--split --part`, `--resume`, ghi config/timing)
+- [ ] T4: `evaluate` theo split (`--split --part test`, `--resume`, ghi config/timing)
 - [ ] T5: Model local: `base_url`, `extra_body`, `--conductor-model`, `--no-thinking`
 
 ### Checkpoint A: nền tảng đánh giá
@@ -90,6 +90,6 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 
 ## Open Questions
 
-1. Ngưỡng cách ly tối đa chấp nhận được (đề xuất 30%); sẽ quyết ở T2 theo số liệu thật.
+1. ~~Ngưỡng cách ly~~ đã chốt ở T2: test đúng 100 câu, cách ly 39,5%, train 744, dev 100.
 2. Judge lượng tử hóa hay hai lượt sinh/chấm; chọn khi chạy `smoke` trên H1.
 3. Thêm dependency vào extra `train` (`peft`, `trl`, `datasets`, `accelerate`, `huggingface_hub`): cần bạn đồng ý ở T6 (đã nêu trong spec là "Ask first").

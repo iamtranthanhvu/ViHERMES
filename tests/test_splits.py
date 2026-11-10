@@ -67,22 +67,23 @@ def test_quarantined_questions_touch_test_contexts():
         assert set(by_id[qid].gold_context_ids) & test_gold
 
 
-def test_test_is_stratified_and_report_subset_has_20_per_hop():
+def test_test_set_is_100_questions_stratified_20_per_hop():
     examples = synthetic()
     by_id = {e.id: e for e in examples}
     split = make_split(examples)
-    test_hops = [by_id[i].hop_level for i in split["test"]]
-    assert all(test_hops.count(h) == 30 for h in range(1, 6))
-    report = split["test_100"]
-    assert set(report) <= set(split["test"])
-    assert [by_id[i].hop_level for i in report].count(3) == 20
-    assert len(report) == 100
+    hops = [by_id[i].hop_level for i in split["test"]]
+    assert len(hops) == 100 and all(hops.count(h) == 20 for h in range(1, 6))
 
 
-def test_report_subset_uses_whole_hop_when_test_is_small():
-    examples = synthetic(per_hop=40)
-    split = make_split(examples)
-    assert set(split["test_100"]) == set(split["test"])
+def test_test_size_is_configurable():
+    split = make_split(synthetic(), test_size=50)
+    assert len(split["test"]) == 50
+
+
+def test_small_hop_group_keeps_questions_for_training():
+    split = make_split(synthetic(per_hop=12))
+    assert len(split["test"]) == 5 * 6
+    assert split["train"] or split["dev"]
 
 
 def test_dev_is_stratified_and_not_empty():
@@ -93,9 +94,9 @@ def test_dev_is_stratified_and_not_empty():
 
 def test_invalid_ratios_rejected():
     with pytest.raises(ValueError):
-        make_split(synthetic(), test=0.0)
+        make_split(synthetic(), test_size=0)
     with pytest.raises(ValueError):
-        make_split(synthetic(), test=0.6, dev=0.5)
+        make_split(synthetic(), dev=1.0)
 
 
 def test_save_and_load_roundtrip(tmp_path):
