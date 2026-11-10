@@ -8,8 +8,7 @@ baseline branch named below.
 | :-- | :-- | :-- | :-- |
 | H1 | `baseline/1-local` | `make b1` | `outputs/report-b1.tar.gz` |
 | H2 | `baseline/2-embed` | `make b2` | `outputs/report-b2.tar.gz` and a fine-tuned `bge-m3` on Hugging Face |
-
-(H3 and H4 are added with the branches `baseline/3-lora` and `baseline/4-all`.)
+| H3 | `baseline/3-lora` | `make b3` | `outputs/report-b3.tar.gz` and a LoRA adapter on Hugging Face |
 
 ## Before the first run
 
@@ -60,6 +59,27 @@ are skipped.
 Copy `outputs/report-b2.tar.gz` to your machine and keep the commit hash printed by the upload;
 H4 downloads exactly that revision.
 
+## H3: B3 (LoRA for the Conductor)
+
+```bash
+git clone <repo> ViHERMES && cd ViHERMES
+git checkout baseline/3-lora
+tmux new -s run
+export HF_TOKEN=...             # the WRITE token for iamtranthanhvu/vihermes-qwen35-4b-conductor-lora
+make setup
+make b3
+```
+
+`make b3` builds the base index, makes training samples from the train split (the exact
+Conductor prompt, answers quoted verbatim from the gold passages, plus abstentions), stops any
+vLLM server (training needs the whole GPU), trains a LoRA adapter, **uploads it to the private
+repo** (commit hash recorded in `outputs/lora-conductor/train_meta.json`), serves the generator
+with the adapter, evaluates with `--conductor-model conductor` and packs. The retriever is the
+B1 one: B3 changes only how the Conductor writes. It stops immediately if `HF_TOKEN` is missing.
+
+`outputs/lora-conductor/train_meta.json` also records how many training tokens each sample has;
+if many samples are dropped for exceeding `LORA_MAX_SEQ`, raise it in `configs/host.env`.
+
 ## Putting the table together (any machine, no GPU)
 
 Put the four `report-bN.tar.gz` files in one folder, then:
@@ -76,9 +96,10 @@ generator model, or a different number of questions.
 ```bash
 make dryrun          # B1
 make dryrun-b2       # B2 (needs the train extra: pip install -e '.[local-models,train]')
+make dryrun-b3       # B3 (needs the train extra)
 ```
 
-Runs the whole chain on a tiny synthetic dataset with a fake model server (and, for B2, a tiny
+Runs the whole chain on a tiny synthetic dataset with a fake model server (and, for B2 and B3, a tiny
 random model and a local folder instead of Hugging Face). Use it to check the Makefile and
 scripts before renting a host. On a Mac, set `VIHERMES_DEVICE=cpu` for any run that loads an
 embedding model: the automatic MPS device can crash.
