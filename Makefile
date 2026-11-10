@@ -8,6 +8,12 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
 
+# BM25 adds up scores over a set of query words, and a set of strings iterates in a different
+# order in every process unless the hash seed is fixed. The sums then differ in their last bits,
+# which reorders passages with almost equal scores, so two identical runs could rank differently.
+# A fixed seed makes every host and every re-run retrieve the same passages in the same order.
+PYTHONHASHSEED := 0
+
 include configs/host.env
 
 VENV ?= .venv
