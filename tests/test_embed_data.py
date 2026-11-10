@@ -29,7 +29,7 @@ def world():
             gold = [f"c{i}" for i in rng.sample(range(150), hop)]
             question = " ".join(f"hồ sơ loại a{g[1:]}" for g in gold)
             examples.append(QAExample(f"q{n}", question, "answer", gold, hop))
-        split = make_split(examples, test_size=9, dev=0.2)
+        split = make_split(examples, test_size=9, validation=0.2)
         retriever = HybridRetriever(graph, weight=0)
         texts = {n.id: n.text for n in units(graph)}
         yield examples, split, retriever, texts

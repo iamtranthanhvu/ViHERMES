@@ -1,4 +1,4 @@
-"""Leak-free train/dev/test splits: choose test first, then quarantine anything that touches it."""
+"""Leak-free train/validation/test splits: choose test first, then quarantine anything that touches it."""
 
 import hashlib
 import json
@@ -6,7 +6,7 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
-PARTS = ("train", "dev", "test", "quarantined")
+PARTS = ("train", "validation", "test", "quarantined")
 
 
 def _digest(split):
@@ -14,19 +14,19 @@ def _digest(split):
     return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
 
 
-def make_split(examples, seed=42, test_size=100, dev=0.12):
+def make_split(examples, seed=42, test_size=100, validation=0.12):
     """Return a split dict.
 
     ``test`` holds ``test_size`` questions, stratified evenly across hop levels; it is also the
     evaluation set reported for every baseline. Every other question that shares a gold context
-    with a test question is quarantined (kept out of train and dev), so no passage that answers
-    a test question is seen during training or model selection. ``dev`` is the fraction of the
+    with a test question is quarantined (kept out of train and validation), so no passage that answers
+    a test question is seen during training or model selection. ``validation`` is the fraction of the
     remaining clean questions held out, stratified by hop, for checkpoint selection.
     """
     if test_size < 1:
         raise ValueError("test_size must be positive")
-    if not 0 <= dev < 1:
-        raise ValueError("dev must be in [0, 1)")
+    if not 0 <= validation < 1:
+        raise ValueError("validation must be in [0, 1)")
     ids = [e.id for e in examples]
     if len(set(ids)) != len(ids):
         raise ValueError("Question IDs must be unique")
@@ -56,12 +56,12 @@ def make_split(examples, seed=42, test_size=100, dev=0.12):
         else:
             clean[example.hop_level].append(example)
 
-    dev_ids, train_ids = [], []
+    validation_ids, train_ids = [], []
     for hop, group in sorted(clean.items()):
         pool = sorted(group, key=lambda e: e.id)
         rng.shuffle(pool)
-        size = min(round(len(pool) * dev), max(len(pool) - 1, 0))
-        dev_ids += [e.id for e in pool[:size]]
+        size = min(round(len(pool) * validation), max(len(pool) - 1, 0))
+        validation_ids += [e.id for e in pool[:size]]
         train_ids += [e.id for e in pool[size:]]
 
     def ordered(values):
@@ -69,9 +69,9 @@ def make_split(examples, seed=42, test_size=100, dev=0.12):
 
     split = {
         "seed": seed,
-        "params": {"test_size": test_size, "dev": dev},
+        "params": {"test_size": test_size, "validation": validation},
         "train": ordered(train_ids),
-        "dev": ordered(dev_ids),
+        "validation": ordered(validation_ids),
         "test": ordered(test_ids),
         "quarantined": ordered(quarantined),
     }
@@ -89,7 +89,7 @@ def make_split(examples, seed=42, test_size=100, dev=0.12):
         },
         "contexts": {name: len(values) for name, values in context_sets.items()},
         "leaked_contexts": len(
-            context_sets["test"] & (context_sets["train"] | context_sets["dev"])
+            context_sets["test"] & (context_sets["train"] | context_sets["validation"])
         ),
     }
     split["hash"] = _digest(split)

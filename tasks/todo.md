@@ -8,11 +8,11 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ## Phase 1: `baseline/1-local`
 
 ### Task 1: Module chia split chống rò rỉ + lệnh `vihermes split`
-**Description:** Thêm `splits.py` với "test trước, cách ly sau": chọn câu test phân tầng theo hop, gom đoạn vàng, loại khỏi train/dev các câu chạm đoạn vàng của test (`quarantined`), chia phần còn lại train/dev. `test` có đúng `test_size` câu (mặc định 100, 20 mỗi hop) và cũng là tập báo cáo; `dev` lấy 12% phần sạch.
+**Description:** Thêm `splits.py` với "test trước, cách ly sau": chọn câu test phân tầng theo hop, gom đoạn vàng, loại khỏi train/validation các câu chạm đoạn vàng của test (`quarantined`), chia phần còn lại train/validation. `test` có đúng `test_size` câu (mặc định 100, 20 mỗi hop) và cũng là tập báo cáo; `validation` lấy 12% phần sạch.
 **Acceptance criteria:**
 - [x] Cùng seed cho cùng kết quả và cùng hash; khác seed cho kết quả khác.
-- [x] Mỗi câu thuộc đúng một trong `train/dev/test/quarantined`; tổng bằng số câu đầu vào.
-- [x] Không đoạn vàng nào của câu test xuất hiện trong gold của câu train hoặc dev.
+- [x] Mỗi câu thuộc đúng một trong `train/validation/test/quarantined`; tổng bằng số câu đầu vào.
+- [x] Không đoạn vàng nào của câu test xuất hiện trong gold của câu train hoặc validation.
 - [x] `test` có đúng 100 câu, 20 mỗi hop 1–5 (không còn khóa `test_100`).
 - [x] `vihermes split` in thống kê: số câu từng phần theo hop, số bị cách ly (% tổng), số đoạn từng phần.
 **Verification:**
@@ -23,10 +23,10 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 **Estimated scope:** Small (3 files)
 
 ### Task 2: Chạy split trên dataset thật, review, chốt `configs/split.json`
-**Description:** Chạy `vihermes split` trên `dataset/dataset.jsonl`, xem mức cách ly và kích thước train/dev thật. Đây là việc rủi ro, làm sớm để biết có cần đổi tỉ lệ trước khi xây thêm.
+**Description:** Chạy `vihermes split` trên `dataset/dataset.jsonl`, xem mức cách ly và kích thước train/validation thật. Đây là việc rủi ro, làm sớm để biết có cần đổi tỉ lệ trước khi xây thêm.
 **Acceptance criteria:**
 - [x] `configs/split.json` được tạo; chạy lần hai cho cùng hash.
-- [x] Báo cáo thống kê gửi người dùng; **người dùng quyết**. Đã chốt: test đúng 100 câu, cách ly chặt (39,5%); train 744, dev 100.
+- [x] Báo cáo thống kê gửi người dùng; **người dùng quyết**. Đã chốt: test đúng 100 câu, cách ly chặt (39,5%); train 744, validation 100.
 - [x] Chỉ commit `configs/split.json` sau khi người dùng đồng ý.
 **Verification:**
 - [x] Chạy hai lần, so hash: `python -c "import json;print(json.load(open('configs/split.json'))['hash'])"`
@@ -151,7 +151,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 10: Dữ liệu fine-tune embedding
 **Description:** `training/embed_data.py`: từ câu **train** tạo cặp (câu hỏi, từng đoạn vàng) và 3 hard negative lấy từ top-30 của retriever B1, bỏ mọi đoạn vàng của câu đó. Lệnh `vihermes make-embed-data`.
 **Acceptance criteria:**
-- [x] Không cặp dương nào chứa đoạn vàng của test, dev hoặc quarantined.
+- [x] Không cặp dương nào chứa đoạn vàng của test, validation hoặc quarantined.
 - [x] Không negative nào thuộc tập vàng của câu tương ứng.
 - [x] Tái lập theo seed; xuất JSONL `{query, positive, negatives}`.
 **Verification:**
@@ -161,7 +161,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 **Estimated scope:** Small (3 files)
 
 ### Task 11: Huấn luyện `bge-m3`
-**Description:** `training/embed.py`: `sentence-transformers` + `MultipleNegativesRankingLoss`, chọn checkpoint theo Recall@5 trên dev, lưu model và `train_meta.json` (seed, hash split, số cặp, siêu tham số, thời gian, loss, VRAM đỉnh). Lệnh `vihermes finetune-embed`.
+**Description:** `training/embed.py`: `sentence-transformers` + `MultipleNegativesRankingLoss`, chọn checkpoint theo Recall@5 trên validation, lưu model và `train_meta.json` (seed, hash split, số cặp, siêu tham số, thời gian, loss, VRAM đỉnh). Lệnh `vihermes finetune-embed`.
 **Acceptance criteria:**
 - [x] Smoke test `--max-steps 2` với model rất nhỏ chạy xong, lưu model và `train_meta.json`.
 - [x] Không dùng test ở bất kỳ bước nào (kiểm bằng test chặn truy cập id test).
@@ -203,7 +203,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 **Estimated scope:** Small (3 files)
 
 ### Task 14: Huấn luyện LoRA `Qwen3.5-4B`
-**Description:** `training/lora.py`: `peft` + `trl` `SFTTrainer`, LoRA bf16 (48GB), gradient checkpointing, loss chỉ trên phần assistant, tắt thinking trong chat template, chọn checkpoint theo eval loss trên dev, lưu adapter và `train_meta.json`. Lệnh `vihermes finetune-lora`.
+**Description:** `training/lora.py`: `peft` + `trl` `SFTTrainer`, LoRA bf16 (48GB), gradient checkpointing, loss chỉ trên phần assistant, tắt thinking trong chat template, chọn checkpoint theo eval loss trên validation, lưu adapter và `train_meta.json`. Lệnh `vihermes finetune-lora`.
 **Acceptance criteria:**
 - [ ] Smoke test `--max-steps 2` với model rất nhỏ lưu được adapter.
 - [ ] Loss chỉ tính trên phần assistant (test kiểm mặt nạ nhãn).

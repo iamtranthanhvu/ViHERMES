@@ -1,6 +1,6 @@
 """Fine-tune an embedding model on (question, gold passage, hard negatives) pairs.
 
-The best checkpoint is picked by Recall@5 on the dev questions; test questions are never used.
+The best checkpoint is picked by Recall@5 on the validation questions; test questions are never used.
 Heavy libraries (torch, sentence-transformers, datasets) are imported only when training starts.
 """
 
@@ -11,13 +11,13 @@ from pathlib import Path
 import numpy as np
 
 
-def dev_recall_at_k(encode, dev, corpus, k=5):
-    """Macro Recall@k of ``dev`` = [(question, gold_ids)] over the whole ``corpus`` {id: text}.
+def validation_recall_at_k(encode, validation, corpus, k=5):
+    """Macro Recall@k of ``validation`` = [(question, gold_ids)] over the whole ``corpus`` {id: text}.
 
     ``encode(list[str]) -> array`` must return L2-normalised vectors. Questions without gold
     passages are ignored; returns None when nothing can be scored.
     """
-    scored = [(q, set(gold)) for q, gold in dev if gold]
+    scored = [(q, set(gold)) for q, gold in validation if gold]
     if not scored:
         return None
     ids = list(corpus)
@@ -56,7 +56,7 @@ def _versions():
 
 def train_embedding(
     rows,
-    dev,
+    validation,
     corpus,
     output,
     base="BAAI/bge-m3",
@@ -72,7 +72,7 @@ def train_embedding(
     gradient_checkpointing=False,
     meta=None,
 ):
-    """Train, keep the best epoch on dev under ``output/model``, write ``output/train_meta.json``."""
+    """Train, keep the best epoch on validation under ``output/model``, write ``output/train_meta.json``."""
     import torch
     from sentence_transformers import (
         SentenceTransformer,
@@ -108,17 +108,17 @@ def train_embedding(
     dataset, dropped = _dataset(rows, negatives)
 
     def recall(m):
-        return dev_recall_at_k(
+        return validation_recall_at_k(
             lambda texts: m.encode(
                 texts, batch_size=32, normalize_embeddings=True, show_progress_bar=False
             ),
-            dev,
+            validation,
             corpus,
         )
 
     history = {"base": recall(model), "epochs": [], "best": None, "best_epoch": None}
 
-    class KeepBestOnDev(TrainerCallback):
+    class KeepBestOnValidation(TrainerCallback):
         def _check(self, state, m, label):
             score = recall(m)
             history["epochs"].append({"label": label, "step": state.global_step, "recall@5": score})
@@ -156,7 +156,7 @@ def train_embedding(
         args=arguments,
         train_dataset=dataset,
         loss=MultipleNegativesRankingLoss(model),
-        callbacks=[KeepBestOnDev()],
+        callbacks=[KeepBestOnValidation()],
     )
     started = time.perf_counter()
     trainer.train()
@@ -177,8 +177,8 @@ def train_embedding(
             "negatives": negatives,
             "max_steps": max_steps,
         },
-        "dev_questions": len(dev),
-        "dev_recall_at_5": history,
+        "validation_questions": len(validation),
+        "validation_recall_at_5": history,
         "loss": [
             {"step": e["step"], "loss": e["loss"]} for e in trainer.state.log_history if "loss" in e
         ],

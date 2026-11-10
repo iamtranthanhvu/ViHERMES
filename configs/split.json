@@ -2,7 +2,7 @@
   "seed": 42,
   "params": {
     "test_size": 100,
-    "dev": 0.12
+    "validation": 0.12
   },
   "train": [
     "row:000001:q2",
@@ -750,7 +750,7 @@
     "row:001556:q2",
     "row:001557:q3"
   ],
-  "dev": [
+  "validation": [
     "row:000000:q1",
     "row:000002:q3",
     "row:000003:q1",
@@ -1577,7 +1577,7 @@
     "records": 1561,
     "sizes": {
       "train": 744,
-      "dev": 100,
+      "validation": 100,
       "test": 100,
       "quarantined": 617
     },
@@ -1590,7 +1590,7 @@
         "4": 103,
         "5": 120
       },
-      "dev": {
+      "validation": {
         "1": 29,
         "2": 24,
         "3": 17,
@@ -1614,11 +1614,11 @@
     },
     "contexts": {
       "train": 561,
-      "dev": 205,
+      "validation": 205,
       "test": 259,
       "quarantined": 496
     },
     "leaked_contexts": 0
   },
-  "hash": "7d47b954553703fae6cab80bd2efb2642ad5a80e874ced6fd810b6f4eb201549"
+  "hash": "75939151e15234ea80c2d5abe9511192e0bea9553326622dd55a661de8899ff6"
 }
