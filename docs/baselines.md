@@ -9,6 +9,9 @@ baseline branch named below.
 | H1 | `baseline/1-local` | `make b1` | `outputs/report-b1.tar.gz` |
 | H2 | `baseline/2-embed` | `make b2` | `outputs/report-b2.tar.gz` and a fine-tuned `bge-m3` on Hugging Face |
 | H3 | `baseline/3-lora` | `make b3` | `outputs/report-b3.tar.gz` and a LoRA adapter on Hugging Face |
+| H4 | `baseline/4-all` | `make b4` | `outputs/report-b4.tar.gz` (no training) |
+
+Run H1, H2 and H3 in parallel. H4 needs the two models that H2 and H3 upload, so start it after both have finished.
 
 ## Before the first run
 
@@ -80,9 +83,32 @@ B1 one: B3 changes only how the Conductor writes. It stops immediately if `HF_TO
 `outputs/lora-conductor/train_meta.json` also records how many training tokens each sample has;
 if many samples are dropped for exceeding `LORA_MAX_SEQ`, raise it in `configs/host.env`.
 
+## H4: B4 (both improvements, no training)
+
+First note the two commit hashes the training hosts recorded (also printed by their upload):
+
+- `hub.revision` in `outputs/embed-ft/train_meta.json` on H2 -> `EMBED_FT_REVISION`
+- `hub.revision` in `outputs/lora-conductor/train_meta.json` on H3 -> `LORA_FT_REVISION`
+
+```bash
+git clone <repo> ViHERMES && cd ViHERMES
+git checkout baseline/4-all
+tmux new -s run
+export HF_TOKEN=...             # a READ token for the two repos
+make setup
+make b4 EMBED_FT_REVISION=<hash from H2> LORA_FT_REVISION=<hash from H3>
+```
+
+(Or put the two hashes in `configs/host.env` and run plain `make b4`.) `make b4` downloads exactly
+those two revisions, indexes with the tuned embedding model, serves the generator with the
+adapter, evaluates and packs. **It never trains:** it fails with a clear message if a revision is
+missing, and `outputs/b4/models.json` in the report records the repos and commits it used. The
+adapter was trained on retrieval from the B1 retriever, so B4's mix of tuned retriever and adapter
+is a slight shift from training; keep that in mind when reading the result.
+
 ## Putting the table together (any machine, no GPU)
 
-Put the four `report-bN.tar.gz` files in one folder, then:
+Copy the four `report-bN.tar.gz` files from the hosts into the project folder (or `outputs/`), then:
 
 ```bash
 make compare            # writes outputs/compare/table.md and results.json
@@ -97,6 +123,7 @@ generator model, or a different number of questions.
 make dryrun          # B1
 make dryrun-b2       # B2 (needs the train extra: pip install -e '.[local-models,train]')
 make dryrun-b3       # B3 (needs the train extra)
+make dryrun-b4       # B1, B2, B3, then B4 from what they published, then the 4-row table
 ```
 
 Runs the whole chain on a tiny synthetic dataset with a fake model server (and, for B2 and B3, a tiny

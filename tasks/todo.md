@@ -248,12 +248,12 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 17: `make b4` (fetch) + dryrun đầy đủ + hoàn thiện docs
 **Description:** `make/b4.mk`: `fetch` model và adapter đúng revision ghim, dựng index, đánh giá với cả hai, `pack`; **không có bước huấn luyện**. Hoàn thiện `docs/baselines.md` (H1–H4 và `make compare`).
 **Acceptance criteria:**
-- [ ] `make dryrun-b4` chạy offline (fetch giả).
-- [ ] B4 không import/gọi `peft`/`trl` trên đường đánh giá (test).
-- [ ] `config.json` của B4 ghi repo id và commit hash của hai model.
-- [ ] `docs/baselines.md` mô tả đủ 4 host bằng vài lệnh.
+- [x] `make dryrun-b4` chạy offline (fetch giả).
+- [x] B4 không import/gọi `peft`/`trl` trên đường đánh giá (test).
+- [x] `config.json` của B4 ghi repo id và commit hash của hai model.
+- [x] `docs/baselines.md` mô tả đủ 4 host bằng vài lệnh.
 **Verification:**
-- [ ] `make dryrun-b4`; `pytest -q`
+- [x] `make dryrun-b4`; `pytest -q`
 **Dependencies:** Task 16
 **Files likely touched:** `make/b4.mk`, `docs/baselines.md`, `tests/test_b4_no_training.py`
 **Estimated scope:** Small (3 files)
