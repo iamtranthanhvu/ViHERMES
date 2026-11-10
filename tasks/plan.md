@@ -90,6 +90,6 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 
 ## Open Questions
 
-1. ~~Ngưỡng cách ly~~ đã chốt ở T2: test đúng 100 câu, cách ly 39,5%, train 744, dev 100.
+1. ~~Ngưỡng cách ly~~ đã chốt ở T2: test đúng 100 câu, cách ly 39,5%, train 744, validation 100.
 2. Judge lượng tử hóa hay hai lượt sinh/chấm; chọn khi chạy `smoke` trên H1.
 3. Thêm dependency vào extra `train` (`peft`, `trl`, `datasets`, `accelerate`, `huggingface_hub`): cần bạn đồng ý ở T6 (đã nêu trong spec là "Ask first").
