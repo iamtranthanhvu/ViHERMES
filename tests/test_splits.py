@@ -140,3 +140,45 @@ def test_cli_split_command(tmp_path):
     stats = json.loads(result.stdout)
     assert stats["records"] == 300 and "quarantined_fraction" in stats
     assert load_split(out)["hash"] == stats["hash"]
+
+
+def write_qa(path, examples):
+    rows = [
+        {
+            "id": e.id,
+            "question": e.question,
+            "answer": e.answer,
+            "hop_level": e.hop_level,
+            "used_context_ids": e.gold_context_ids,
+        }
+        for e in examples
+    ]
+    path.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+
+
+def run_cli(*args):
+    return subprocess.run(
+        [sys.executable, "-m", "vihermes", *map(str, args)], capture_output=True, text=True
+    )
+
+
+def test_cli_check_accepts_a_matching_dataset_and_rejects_a_changed_one(tmp_path):
+    qa, out = tmp_path / "qa.jsonl", tmp_path / "split.json"
+    write_qa(qa, synthetic(per_hop=60))
+    assert run_cli("split", "--qa", qa, "--output", out).returncode == 0
+    ok = run_cli("split", "--qa", qa, "--check", out)
+    assert ok.returncode == 0, ok.stderr
+    assert json.loads(ok.stdout)["matches"] is True
+    write_qa(qa, synthetic(per_hop=60, seed=1))  # same size, different contexts
+    bad = run_cli("split", "--qa", qa, "--check", out)
+    assert bad.returncode == 2 and "does not match" in bad.stderr
+
+
+def test_check_uses_the_parameters_stored_in_the_split_file(tmp_path):
+    qa, out = tmp_path / "qa.jsonl", tmp_path / "split.json"
+    write_qa(qa, synthetic(per_hop=60))
+    assert (
+        run_cli("split", "--qa", qa, "--output", out, "--test-size", 50, "--seed", 3).returncode
+        == 0
+    )
+    assert run_cli("split", "--qa", qa, "--check", out).returncode == 0

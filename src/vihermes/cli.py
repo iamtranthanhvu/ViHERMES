@@ -31,7 +31,11 @@ def embedder(args):
         return OpenAIEmbedder(args.embedding_model or "text-embedding-3-small")
     if not args.embedding_model:
         raise ValueError("--embedding-model is required for sentence-transformers")
-    return SentenceEmbedder(args.embedding_model, max_seq_length=args.max_seq_length)
+    return SentenceEmbedder(
+        args.embedding_model,
+        max_seq_length=args.max_seq_length,
+        revision=args.embedding_revision,
+    )
 
 
 def graph(args, stack):
@@ -113,6 +117,9 @@ def parser():
             )
             command.add_argument("--embedding-model")
             command.add_argument("--max-seq-length", type=int)
+            command.add_argument(
+                "--embedding-revision", help="commit hash of the embedding model to load"
+            )
             command.add_argument("--index", default="outputs/dense.npz")
             command.add_argument("--vector", choices=["numpy", "milvus"], default="numpy")
         if name in ("retrieve", "ask", "evaluate"):
@@ -164,7 +171,8 @@ def parser():
             command.add_argument("--seed", type=int, default=42)
     split = sub.add_parser("split")
     split.add_argument("--qa", required=True)
-    split.add_argument("--output", required=True)
+    split.add_argument("--output")
+    split.add_argument("--check", help="verify this split file against --qa instead of writing")
     split.add_argument("--seed", type=int, default=42)
     split.add_argument("--test-size", type=int, default=100)
     split.add_argument("--dev", type=float, default=0.12)
@@ -256,8 +264,19 @@ def run(args):
 
         return {"path": str(fetch(args.repo, args.revision, args.dest)), "repo": args.repo}
     if args.command == "split":
-        from .splits import make_split, save_split
+        from .splits import load_split, make_split, save_split
 
+        if args.check:
+            stored = load_split(args.check)
+            params = stored["params"]
+            fresh = make_split(load_qa(args.qa), stored["seed"], params["test_size"], params["dev"])
+            if fresh["hash"] != stored["hash"]:
+                raise ValueError(
+                    f"{args.check} does not match {args.qa}: the dataset or the split code changed"
+                )
+            return {"matches": True, "hash": stored["hash"]}
+        if not args.output:
+            raise ValueError("--output is required unless --check is given")
         split = make_split(load_qa(args.qa), args.seed, args.test_size, args.dev)
         save_split(split, args.output)
         return {"output": str(args.output), "hash": split["hash"], **split["stats"]}

@@ -41,11 +41,17 @@ class OpenAIEmbedder:
 
 
 class SentenceEmbedder:
-    def __init__(self, model, batch_size=32, max_seq_length=None):
+    def __init__(self, model, batch_size=32, max_seq_length=None, revision=None):
         from sentence_transformers import SentenceTransformer
 
-        self.model = SentenceTransformer(model)
+        self.model = (
+            SentenceTransformer(model, revision=revision)
+            if revision
+            else (SentenceTransformer(model))
+        )
         self.identity, self.batch_size = "sentence-transformers:" + model, batch_size
+        if revision:
+            self.identity += f"@{revision[:12]}"
         if max_seq_length:
             # Truncation changes the vectors, so it must change the index identity too.
             self.model.max_seq_length = max_seq_length

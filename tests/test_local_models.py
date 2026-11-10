@@ -110,8 +110,8 @@ def test_default_model_still_reads_the_environment(servers, monkeypatch):
 
 
 class FakeSentenceTransformer:
-    def __init__(self, model):
-        self.model, self.max_seq_length = model, 8192
+    def __init__(self, model, revision=None):
+        self.model, self.revision, self.max_seq_length = model, revision, 8192
 
     def encode(self, texts, batch_size, normalize_embeddings):
         import numpy as np
@@ -133,6 +133,17 @@ def test_sentence_embedder_can_limit_sequence_length(monkeypatch):
     assert (
         limited.identity != plain.identity
     )  # truncation changes the vectors, so the index key too
+
+
+def test_sentence_embedder_pins_a_model_revision(monkeypatch):
+    import types
+
+    fake = types.SimpleNamespace(SentenceTransformer=FakeSentenceTransformer)
+    monkeypatch.setitem(sys.modules, "sentence_transformers", fake)
+    plain = SentenceEmbedder("BAAI/bge-m3")
+    pinned = SentenceEmbedder("BAAI/bge-m3", revision="a" * 40)
+    assert plain.model.revision is None and pinned.model.revision == "a" * 40
+    assert pinned.identity != plain.identity
 
 
 def cli(*args, **kwargs):
