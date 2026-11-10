@@ -78,22 +78,22 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 **Estimated scope:** Medium (4 files)
 
 ### Checkpoint A: nền tảng đánh giá
-- [ ] `pytest -q` và `ruff check src tests` sạch
-- [ ] `configs/split.json` đã được người dùng duyệt (T2)
-- [ ] Kết quả T3 đã được xem xét và thiết kế LoRA điều chỉnh nếu cần
-- [ ] Review với người dùng trước khi tiếp tục
+- [x] `pytest -q` và `ruff check src tests` sạch
+- [x] `configs/split.json` đã được người dùng duyệt (T2)
+- [x] Kết quả T3 đã được xem xét và thiết kế LoRA điều chỉnh nếu cần
+- [x] Review với người dùng trước khi tiếp tục
 
 ---
 
 ### Task 6: Extra `train` + `hub.py` (publish/fetch ghim revision)
 **Description:** Thêm extra `train` vào `pyproject.toml` (`peft`, `trl`, `datasets`, `accelerate`, `huggingface_hub`; **hỏi người dùng trước khi sửa**). Viết `hub.py`: `publish(path, repo_id)` trả commit hash; `fetch(repo_id, revision, dest)` tải đúng revision và kiểm tra đủ file. Thêm lệnh `vihermes publish` và `vihermes fetch`.
 **Acceptance criteria:**
-- [ ] `pip install -e .` vẫn nhẹ (import trễ thư viện nặng).
-- [ ] Token chỉ đọc từ `HF_TOKEN`; không bao giờ in ra log hay ghi vào file.
-- [ ] `publish` ghi hash vào file meta; `fetch` từ chối khi thiếu file hoặc revision sai.
-- [ ] Repo luôn là private khi tạo; không tạo repo public.
+- [x] `pip install -e .` vẫn nhẹ (import trễ thư viện nặng).
+- [x] Token chỉ đọc từ `HF_TOKEN`; không bao giờ in ra log hay ghi vào file.
+- [x] `publish` ghi hash vào file meta; `fetch` từ chối khi thiếu file hoặc revision sai.
+- [x] Repo luôn là private khi tạo; không tạo repo public.
 **Verification:**
-- [ ] `pytest -q tests/test_hub.py` (dùng `huggingface_hub` giả, không gọi mạng)
+- [x] `pytest -q tests/test_hub.py` (dùng `huggingface_hub` giả, không gọi mạng)
 **Dependencies:** None (cần người dùng đồng ý thêm dependency)
 **Files likely touched:** `pyproject.toml`, `src/vihermes/hub.py`, `src/vihermes/cli.py`, `tests/test_hub.py`
 **Estimated scope:** Medium (4 files)

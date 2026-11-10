@@ -168,6 +168,14 @@ def parser():
     split.add_argument("--seed", type=int, default=42)
     split.add_argument("--test-size", type=int, default=100)
     split.add_argument("--dev", type=float, default=0.12)
+    publish = sub.add_parser("publish", help="upload a model folder to a private HF repo")
+    publish.add_argument("--path", required=True)
+    publish.add_argument("--repo", required=True)
+    publish.add_argument("--meta", help="JSON file that receives the repo and commit hash")
+    fetch = sub.add_parser("fetch", help="download a model pinned by commit hash")
+    fetch.add_argument("--repo", required=True)
+    fetch.add_argument("--revision", required=True)
+    fetch.add_argument("--dest", required=True)
     audit = sub.add_parser("audit-data")
     audit.add_argument("--qa", required=True)
     extract = sub.add_parser("extract-contexts")
@@ -220,6 +228,15 @@ def run(args):
         return demo(args.output)
     if args.command == "extract-contexts":
         return {"contexts": extract_contexts(args.qa, args.output)}
+    if args.command == "publish":
+        from .hub import publish
+
+        revision = publish(args.path, args.repo, args.meta)
+        return {"repo": args.repo, "revision": revision}
+    if args.command == "fetch":
+        from .hub import fetch
+
+        return {"path": str(fetch(args.repo, args.revision, args.dest)), "repo": args.repo}
     if args.command == "split":
         from .splits import make_split, save_split
 
