@@ -56,7 +56,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 ### Checkpoint B: **cổng người dùng**, thuê H1, chạy `make smoke` rồi `make b1`
 
 ### Phase 2 — `baseline/2-embed` (B2)
-- [ ] T10: Dữ liệu fine-tune embedding
+- [x] T10: Dữ liệu fine-tune embedding
 - [ ] T11: Huấn luyện `bge-m3`
 - [ ] T12: `make b2` (huấn luyện → publish → index → đánh giá)
 

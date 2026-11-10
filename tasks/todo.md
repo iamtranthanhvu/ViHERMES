@@ -151,11 +151,11 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 10: Dữ liệu fine-tune embedding
 **Description:** `training/embed_data.py`: từ câu **train** tạo cặp (câu hỏi, từng đoạn vàng) và 3 hard negative lấy từ top-30 của retriever B1, bỏ mọi đoạn vàng của câu đó. Lệnh `vihermes make-embed-data`.
 **Acceptance criteria:**
-- [ ] Không cặp dương nào chứa đoạn vàng của test, dev hoặc quarantined.
-- [ ] Không negative nào thuộc tập vàng của câu tương ứng.
-- [ ] Tái lập theo seed; xuất JSONL `{query, positive, negatives}`.
+- [x] Không cặp dương nào chứa đoạn vàng của test, dev hoặc quarantined.
+- [x] Không negative nào thuộc tập vàng của câu tương ứng.
+- [x] Tái lập theo seed; xuất JSONL `{query, positive, negatives}`.
 **Verification:**
-- [ ] `pytest -q tests/test_embed_data.py` (corpus giả, encoder `hash`)
+- [x] `pytest -q tests/test_embed_data.py` (corpus giả, encoder `hash`)
 **Dependencies:** Phase 1 (T1, T2, T4)
 **Files likely touched:** `src/vihermes/training/embed_data.py`, `src/vihermes/cli.py`, `tests/test_embed_data.py`
 **Estimated scope:** Small (3 files)

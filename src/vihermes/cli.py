@@ -107,11 +107,11 @@ def parser():
     p = argparse.ArgumentParser(prog="vihermes", description=__doc__)
     p.add_argument("--version", action="version", version=__version__)
     sub = p.add_subparsers(dest="command", required=True)
-    for name in ("ingest", "index", "retrieve", "ask", "evaluate", "construct"):
+    for name in ("ingest", "index", "retrieve", "ask", "evaluate", "construct", "make-embed-data"):
         command = sub.add_parser(name)
         command.add_argument("--graph", choices=["sqlite", "neo4j"], default="sqlite")
         command.add_argument("--db", default="outputs/vihermes.db")
-        if name in ("index", "retrieve", "ask", "evaluate", "construct"):
+        if name in ("index", "retrieve", "ask", "evaluate", "construct", "make-embed-data"):
             command.add_argument(
                 "--embedding", choices=["openai", "sentence-transformers", "hash"], default="openai"
             )
@@ -122,7 +122,7 @@ def parser():
             )
             command.add_argument("--index", default="outputs/dense.npz")
             command.add_argument("--vector", choices=["numpy", "milvus"], default="numpy")
-        if name in ("retrieve", "ask", "evaluate"):
+        if name in ("retrieve", "ask", "evaluate", "make-embed-data"):
             command.add_argument("--dense-weight", type=float, default=0.5)
             command.add_argument("-k", type=int, default=5)
             command.add_argument("--max-depth", type=int, default=4)
@@ -160,6 +160,13 @@ def parser():
                 "--judge-base-url", help="OpenAI-compatible endpoint for the judge"
             )
             command.add_argument("--ks", default="1,5,10")
+        elif name == "make-embed-data":
+            command.add_argument("--qa", required=True)
+            command.add_argument("--split", required=True)
+            command.add_argument("--output", required=True)
+            command.add_argument("--negatives", type=int, default=3)
+            command.add_argument("--pool", type=int, default=30)
+            command.add_argument("--seed", type=int, default=42)
         elif name == "construct":
             command.add_argument("--output", required=True)
             command.add_argument("--hops", default="1,2,3,4,5")
@@ -316,6 +323,25 @@ def run(args):
                 args.seed,
             )
         pathfinder = pipeline(args, store, stack)
+        if args.command == "make-embed-data":
+            from .splits import load_split
+            from .training.embed_data import build_embed_data
+
+            rows, stats = build_embed_data(
+                load_qa(args.qa),
+                load_split(args.split),
+                pathfinder.retriever,
+                {n.id: n.text for n in units(store)},
+                args.negatives,
+                args.pool,
+                args.seed,
+            )
+            output = Path(args.output)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            with output.open("w", encoding="utf-8") as f:
+                for row in rows:
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
+            return {"output": str(output), **stats}
         if args.command == "retrieve":
             return asdict(pathfinder.retrieve(Plan(args.question)))
         if args.command == "ask":
