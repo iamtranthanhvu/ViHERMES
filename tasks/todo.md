@@ -101,12 +101,12 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 7: `configs/host.env` + `scripts/serve.sh`
 **Description:** `host.env`: id model kèm revision (ô trống để điền sau khi xác nhận trên HF), cổng, `gpu-memory-utilization`, chế độ judge, `HF_USER=iamtranthanhvu`, tên hai repo. `serve.sh base|lora|judge`: bật vLLM nền, log ở `outputs/logs/`, đợi `/v1/models` sẵn sàng.
 **Acceptance criteria:**
-- [ ] Không chứa bí mật nào.
-- [ ] `serve.sh` báo lỗi rõ khi thiếu `vllm` hoặc đường dẫn adapter; không treo vô hạn (có timeout).
-- [ ] Chế độ `lora` bật `--enable-lora --lora-modules conductor=<path>`.
+- [x] Không chứa bí mật nào.
+- [x] `serve.sh` báo lỗi rõ khi thiếu `vllm` hoặc đường dẫn adapter; không treo vô hạn (có timeout).
+- [x] Chế độ `lora` bật `--enable-lora --lora-modules conductor=<path>`.
 **Verification:**
-- [ ] `bash -n scripts/serve.sh`; `shellcheck scripts/serve.sh` (nếu có)
-- [ ] `grep -iE "hf_|token|key" configs/host.env` không thấy giá trị bí mật
+- [x] `bash -n scripts/serve.sh`; `shellcheck scripts/serve.sh` (nếu có)
+- [x] `grep -iE "hf_|token|key" configs/host.env` không thấy giá trị bí mật
 **Dependencies:** None
 **Files likely touched:** `configs/host.env`, `scripts/serve.sh`
 **Estimated scope:** Small (2 files)
