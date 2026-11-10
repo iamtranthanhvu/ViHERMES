@@ -44,11 +44,12 @@ class SentenceEmbedder:
     def __init__(self, model, batch_size=32, max_seq_length=None, revision=None):
         from sentence_transformers import SentenceTransformer
 
-        self.model = (
-            SentenceTransformer(model, revision=revision)
-            if revision
-            else (SentenceTransformer(model))
-        )
+        # VIHERMES_DEVICE=cpu forces a device; the library would pick Apple's MPS on a Mac,
+        # whose backend can crash. Unset means the library default (CUDA on the hosts).
+        options = {"revision": revision} if revision else {}
+        if os.environ.get("VIHERMES_DEVICE"):
+            options["device"] = os.environ["VIHERMES_DEVICE"]
+        self.model = SentenceTransformer(model, **options)
         self.identity, self.batch_size = "sentence-transformers:" + model, batch_size
         if revision:
             self.identity += f"@{revision[:12]}"

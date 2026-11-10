@@ -7,8 +7,9 @@ baseline branch named below.
 | Host | Branch | Command | Result |
 | :-- | :-- | :-- | :-- |
 | H1 | `baseline/1-local` | `make b1` | `outputs/report-b1.tar.gz` |
+| H2 | `baseline/2-embed` | `make b2` | `outputs/report-b2.tar.gz` and a fine-tuned `bge-m3` on Hugging Face |
 
-(H2 to H4 are added with the branches `baseline/2-embed`, `baseline/3-lora`, `baseline/4-all`.)
+(H3 and H4 are added with the branches `baseline/3-lora` and `baseline/4-all`.)
 
 ## Before the first run
 
@@ -38,6 +39,27 @@ Copy the result to your machine:
 scp -P <PORT> root@<IP>:ViHERMES/outputs/report-b1.tar.gz .
 ```
 
+## H2: B2 (fine-tuned embedding)
+
+```bash
+git clone <repo> ViHERMES && cd ViHERMES
+git checkout baseline/2-embed
+tmux new -s run
+export HF_TOKEN=...             # the WRITE token for iamtranthanhvu/vihermes-bge-m3-ft; type it here, never commit it
+make setup
+make b2
+```
+
+`make b2` builds the base index, makes training pairs from the train split, fine-tunes
+`bge-m3`, **uploads it to the private repo** (and records the commit hash in
+`outputs/embed-ft/train_meta.json`), indexes with the tuned model, evaluates and packs. It
+stops immediately if `HF_TOKEN` is missing, so you do not lose hours of training to a failed
+upload. If it is interrupted, run `make b2` again: the trained model is kept and finished steps
+are skipped.
+
+Copy `outputs/report-b2.tar.gz` to your machine and keep the commit hash printed by the upload;
+H4 downloads exactly that revision.
+
 ## Putting the table together (any machine, no GPU)
 
 Put the four `report-bN.tar.gz` files in one folder, then:
@@ -52,11 +74,14 @@ generator model, or a different number of questions.
 ## Rehearsal without a GPU
 
 ```bash
-make dryrun
+make dryrun          # B1
+make dryrun-b2       # B2 (needs the train extra: pip install -e '.[local-models,train]')
 ```
 
-Runs the whole B1 chain on a tiny synthetic dataset with a fake model server. Use it to check
-the Makefile and scripts before renting a host.
+Runs the whole chain on a tiny synthetic dataset with a fake model server (and, for B2, a tiny
+random model and a local folder instead of Hugging Face). Use it to check the Makefile and
+scripts before renting a host. On a Mac, set `VIHERMES_DEVICE=cpu` for any run that loads an
+embedding model: the automatic MPS device can crash.
 
 ## If something fails
 

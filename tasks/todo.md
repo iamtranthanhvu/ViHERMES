@@ -175,11 +175,11 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ### Task 12: `make b2`
 **Description:** `make/b2.mk`: index gốc → dữ liệu → huấn luyện → `publish` lên `iamtranthanhvu/vihermes-bge-m3-ft` → index mới (`dense-b2.npz`) → đánh giá → `pack`. Mở rộng `dryrun` cho B2 (model nhỏ, không đẩy HF).
 **Acceptance criteria:**
-- [ ] `make dryrun-b2` chạy offline hết chuỗi trừ `publish` (có chế độ giả).
-- [ ] Idempotent: bỏ qua bước đã có artifact.
-- [ ] `publish` thất bại thì dừng và báo rõ, không bỏ qua im lặng.
+- [x] `make dryrun-b2` chạy offline hết chuỗi trừ `publish` (có chế độ giả).
+- [x] Idempotent: bỏ qua bước đã có artifact.
+- [x] `publish` thất bại thì dừng và báo rõ, không bỏ qua im lặng.
 **Verification:**
-- [ ] `make dryrun-b2`; `make -n b2`
+- [x] `make dryrun-b2`; `make -n b2`
 **Dependencies:** Task 9, 11
 **Files likely touched:** `make/b2.mk`, `docs/baselines.md`
 **Estimated scope:** Small (2 files)

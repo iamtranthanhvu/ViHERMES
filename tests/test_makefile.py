@@ -156,3 +156,54 @@ def test_dryrun_runs_the_whole_b1_chain_offline_and_is_idempotent():
         assert metrics["overall"][key] is not None
     again = make("-q", "DRYRUN=1", "outputs/dryrun/report-b1.tar.gz")
     assert again.returncode == 0, "a second run would redo finished work"
+
+
+@needs_tools
+def test_make_b2_plan_trains_publishes_then_evaluates_the_tuned_model():
+    result = make("-n", "-B", "outputs/b2/metrics.json", "HF_TOKEN=x")
+    assert result.returncode == 0, result.stderr
+    plan = result.stdout
+    order = [
+        "make-embed-data",
+        "finetune-embed",
+        "publish --path outputs/embed-ft/model --repo iamtranthanhvu/vihermes-bge-m3-ft",
+        "--index outputs/dense-b2.npz --force",
+        "--embedding-model outputs/embed-ft/model",
+        "--output outputs/b2",
+    ]
+    positions = [plan.index(item) for item in order]
+    assert positions == sorted(positions), "steps are out of order"
+
+
+@needs_tools
+def test_b2_stops_early_without_a_hugging_face_token():
+    env = {k: v for k, v in os.environ.items() if k not in ("HF_TOKEN", "VIHERMES_HUB_DIR")}
+    result = subprocess.run(
+        ["make", "outputs/embed-ft/model/modules.json"],
+        cwd=ROOT, capture_output=True, text=True, env=env,
+    )  # fmt: skip
+    assert result.returncode != 0 and "HF_TOKEN" in result.stdout + result.stderr
+
+
+@needs_tools
+@pytest.mark.skipif(
+    shutil.which("python3") is None
+    or subprocess.run(
+        [sys.executable, "-c", "import sentence_transformers, datasets, transformers"],
+        capture_output=True,
+    ).returncode
+    != 0,
+    reason="needs the train extra",
+)
+def test_dryrun_b2_trains_publishes_and_evaluates_offline():
+    result = make("dryrun-b2")
+    assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-3000:]
+    out = ROOT / "outputs" / "dryrun"
+    assert (out / "report-b2.tar.gz").exists()
+    meta = json.loads((out / "embed-ft" / "train_meta.json").read_text())
+    assert (
+        meta["hub"]["repo"] == "iamtranthanhvu/vihermes-bge-m3-ft"
+        and len(meta["hub"]["revision"]) == 40
+    )
+    metrics = json.loads((out / "b2" / "metrics.json").read_text())
+    assert metrics["overall"]["n"] == 10 and metrics["overall"]["recall@5"] is not None

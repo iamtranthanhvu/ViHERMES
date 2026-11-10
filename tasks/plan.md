@@ -58,7 +58,7 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 ### Phase 2 — `baseline/2-embed` (B2)
 - [x] T10: Dữ liệu fine-tune embedding
 - [x] T11: Huấn luyện `bge-m3`
-- [ ] T12: `make b2` (huấn luyện → publish → index → đánh giá)
+- [x] T12: `make b2` (huấn luyện → publish → index → đánh giá)
 
 ### Phase 3 — `baseline/3-lora` (B3)
 - [ ] T13: Dữ liệu LoRA cho Conductor
