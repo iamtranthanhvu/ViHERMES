@@ -105,6 +105,11 @@ def train_embedding(
     options = {"revision": revision} if revision else {}
     model = SentenceTransformer(base, device=device, **options)
     model.max_seq_length = max_seq_length
+    if gradient_checkpointing:
+        # Enabled on the underlying transformer: the Trainer's own switch calls a method that
+        # SentenceTransformer does not support in the current releases. Memory drops sharply and
+        # the loss, the batch and the in-batch negatives stay exactly the same.
+        model[0].auto_model.gradient_checkpointing_enable()
     dataset, dropped = _dataset(rows, negatives)
 
     def recall(m):
@@ -144,7 +149,6 @@ def train_embedding(
         bf16=cuda and torch.cuda.is_bf16_supported(),
         use_cpu=not cuda,
         batch_sampler=BatchSamplers.NO_DUPLICATES,  # rows of one question share text; avoid false negatives
-        gradient_checkpointing=gradient_checkpointing,
         seed=seed,
         logging_steps=10,
         save_strategy="no",

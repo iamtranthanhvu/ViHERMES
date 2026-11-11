@@ -95,6 +95,21 @@ def test_cli_finetune_embed_smoke_with_a_tiny_model(prepared, tiny_st_dir):
     assert probe.stdout.strip().splitlines()[-1] == "1"
 
 
+def test_cli_finetune_embed_runs_with_gradient_checkpointing(prepared, tiny_st_dir):
+    # The memory switch used on the real 48 GB run: the Trainer's own flag breaks on current
+    # sentence-transformers, so the model enables it itself.
+    pytest.importorskip("datasets")
+    db, split, data, tmp = prepared
+    out = tmp / "embed-ft-gc"
+    result = run_cli(
+        "finetune-embed", "--data", data, "--qa", FIXTURE, "--split", split, "--db", db,
+        "--base", tiny_st_dir, "--output", out, "--max-steps", 2, "--batch-size", 4,
+        "--max-seq-length", 32, "--gradient-checkpointing",
+    )  # fmt: skip
+    assert result.returncode == 0, result.stderr[-3000:]
+    assert json.loads((out / "train_meta.json").read_text())["steps"] == 2
+
+
 def test_training_refuses_rows_that_use_a_forbidden_passage(prepared, tiny_st_dir, tmp_path):
     pytest.importorskip("datasets")
     from vihermes.training.embed import train_embedding

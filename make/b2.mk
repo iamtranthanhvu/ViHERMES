@@ -17,7 +17,7 @@ FT_PREREQ := $(OUT)/tiny-st/modules.json
 else
 FT_BASE := $(EMBED_BASE)
 FT_TRAIN_ARGS := --epochs $(EMBED_EPOCHS) --lr $(EMBED_LR) --batch-size $(EMBED_BATCH) \
-	--max-seq-length $(EMBED_MAX_SEQ_LENGTH) --negatives $(EMBED_NEGATIVES) \
+	--max-seq-length $(EMBED_MAX_SEQ_LENGTH) --negatives $(EMBED_NEGATIVES) --gradient-checkpointing \
 	$(if $(EMBED_REVISION),--revision $(EMBED_REVISION))
 FT_FLAGS := --embedding sentence-transformers --embedding-model $(EMBED_FT_DIR)/model \
 	--max-seq-length $(EMBED_MAX_SEQ_LENGTH)
