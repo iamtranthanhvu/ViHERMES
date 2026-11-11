@@ -85,11 +85,11 @@ Phase 2 và Phase 3 độc lập, làm song song được; chỉ gặp nhau ở 
 | Xung đột merge ở `cli.py`, `Makefile`, `pyproject.toml` | Trung bình | Quyết định kiến trúc ở trên (extra chung, module riêng, `include make/*.mk`) |
 | Lỗi Makefile chỉ lộ khi đã thuê host (tốn tiền) | Trung bình | `make dryrun` offline, `make -n`, `bash -n` |
 | Bốn host cho số không so sánh được | Cao | Ghim revision model, phiên bản vLLM, hash split; `compare` từ chối nếu lệch |
-| 100 câu quá nhiễu để thấy mức tăng | Trung bình | Đã chấp nhận; ghi chú dưới bảng; cờ để tăng số câu về sau |
+| 25 câu quá nhiễu để thấy mức tăng | Trung bình | Đã chấp nhận; ghi chú dưới bảng; cờ để tăng số câu về sau |
 | Lộ `HF_TOKEN` | Cao | Chỉ qua biến môi trường tại host; không ghi vào file/log; `.gitignore` đã chặn `.env` |
 
 ## Open Questions
 
-1. ~~Ngưỡng cách ly~~ đã chốt ở T2: test đúng 100 câu, cách ly 39,5%, train 744, validation 100.
+1. ~~Ngưỡng cách ly~~ đã chốt ở T2: test đúng 25 câu, cách ly 17,6%, train 1.110, validation 151.
 2. Judge lượng tử hóa hay hai lượt sinh/chấm; chọn khi chạy `smoke` trên H1.
 3. Thêm dependency vào extra `train` (`peft`, `trl`, `datasets`, `accelerate`, `huggingface_hub`): cần bạn đồng ý ở T6 (đã nêu trong spec là "Ask first").

@@ -67,12 +67,12 @@ def test_quarantined_questions_touch_test_contexts():
         assert set(by_id[qid].gold_context_ids) & test_gold
 
 
-def test_test_set_is_100_questions_stratified_20_per_hop():
+def test_test_set_is_25_questions_stratified_5_per_hop():
     examples = synthetic()
     by_id = {e.id: e for e in examples}
     split = make_split(examples)
     hops = [by_id[i].hop_level for i in split["test"]]
-    assert len(hops) == 100 and all(hops.count(h) == 20 for h in range(1, 6))
+    assert len(hops) == 25 and all(hops.count(h) == 5 for h in range(1, 6))
 
 
 def test_test_size_is_configurable():
@@ -81,7 +81,8 @@ def test_test_size_is_configurable():
 
 
 def test_small_hop_group_keeps_questions_for_training():
-    split = make_split(synthetic(per_hop=12))
+    # Asking for 20 per hop from groups of 12 takes only half of each group (6).
+    split = make_split(synthetic(per_hop=12), test_size=100)
     assert len(split["test"]) == 5 * 6
     assert split["train"] or split["validation"]
 
