@@ -1,5 +1,6 @@
 """Four explicit roles, coordinated through dependency injection."""
 
+import json
 import re
 from dataclasses import asdict
 from datetime import date
@@ -125,15 +126,20 @@ class Auditor:
                 # Offline mode is deliberately extractive; synthesis requires semantic verification.
                 errors.append("extractive_mode_requires_exact_claim")
         if not errors and self.llm:
-            verdict = self.llm.json(
-                VERIFY,
-                {
-                    "question": question,
-                    "claims": [asdict(c) for c in claims],
-                    "evidence": serialize_evidence(retrieved),
-                    "edges": [asdict(e) for e in retrieved.edges],
-                },
-            )
+            try:
+                verdict = self.llm.json(
+                    VERIFY,
+                    {
+                        "question": question,
+                        "claims": [asdict(c) for c in claims],
+                        "evidence": serialize_evidence(retrieved),
+                        "edges": [asdict(e) for e in retrieved.edges],
+                    },
+                )
+            except json.JSONDecodeError:
+                # A verifier that rambles until its reply is cut off has verified nothing, so the
+                # answer is rejected like any other unverified one instead of stopping the run.
+                verdict = {"supported": False, "reasons": ["verifier_output_not_valid_json"]}
             if verdict.get("supported") is not True:
                 errors.append("semantic_grounding_failed")
                 reasons = verdict.get("reasons", [])
