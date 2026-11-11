@@ -109,6 +109,8 @@ def test_base_mode_waits_until_ready_and_passes_settings(env):
     assert args[args.index("--port") + 1] == env["GEN_PORT"]
     assert args[args.index("--revision") + 1] == "a" * 40
     assert "--enable-lora" not in args
+    # Qwen3.5 needs a Mamba state block per sequence; the default of 256 does not fit beside a 9B.
+    assert args[args.index("--max-num-seqs") + 1] == "8"
     assert (Path(env["LOG_DIR"]) / "vllm.version").read_text().strip() == "0.0.fake"
 
 
