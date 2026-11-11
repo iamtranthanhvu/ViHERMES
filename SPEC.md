@@ -39,7 +39,7 @@ Mức chênh `(+/−)` tính trực tiếp từ B1, không phải chỉ số m�
 
 1. **Phải giữ lại tập test không dùng để huấn luyện.** Fine-tune dùng chính dataset của paper, nên nếu đánh giá trên câu đã học thì mức tăng so với B1 là giả. Cả B1–B4 đều đánh giá trên **cùng tập test giữ lại** (B1 không huấn luyện nhưng vẫn đánh giá trên tập này để so cùng điều kiện).
 2. **Cùng judge, cùng corpus, cùng cấu hình** cho mọi dòng; chỉ khác phần được fine-tune.
-3. **Độ nhiễu:** với 100 câu, sai số khoảng ±10 điểm % ở mức tổng, ±22 điểm % mỗi hop. Mức tăng nhỏ hơn mức này có thể chỉ là nhiễu; phải ghi chú dưới bảng.
+3. **Độ nhiễu:** với 25 câu, sai số khoảng ±20 điểm % ở mức tổng, ±44 điểm % mỗi hop (5 câu). Mức tăng nhỏ hơn mức này có thể chỉ là nhiễu; phải ghi chú dưới bảng.
 
 Corpus nạp từ `contexts.csv` cho `0 edges` (không có đồ thị); điều này áp dụng đồng đều cho mọi dòng nên không ảnh hưởng so sánh với B1.
 
@@ -66,9 +66,9 @@ main                      paper gốc, không đụng
 ### W1 chi tiết: split và tập đánh giá
 
 - Mỗi đoạn ngữ cảnh là bằng chứng của ~4–5 câu hỏi, nên chia ngẫu nhiên theo câu sẽ rò rỉ. Dùng **"test trước, cách ly sau"**: chọn câu test phân tầng theo hop, gom đoạn vàng của chúng, **loại khỏi train mọi câu khác chạm vào các đoạn đó** (`quarantined`), phần còn lại chia train/validation. Mức mất dữ liệu chưa đo; `vihermes split` in thống kê.
-- **Đã chốt (sau khi đo trên dữ liệu thật):** test đúng **100 câu** (20 mỗi hop), cách ly chặt; `validation` = 12% phần sạch còn lại; seed 42. Kết quả thật: train 744, validation 100, test 100, quarantined 617 (39,5%), không rò rỉ. Test 311 câu sẽ cách ly 60% và chỉ còn 168 câu train, nên không dùng. Lưu `configs/split.json` kèm hash; cả 4 baseline dùng chung.
-- **Tập báo cáo = chính tập `test` (100 câu, 20 câu mỗi hop), cố định theo seed.** Không dùng `--limit` vì dataset sắp xếp theo khối hop (sẽ chỉ lấy hop 1).
-- Cả ba chỉ số của bảng (F1, LLM Judge, Recall@5) tính trên cùng 100 câu này. Với 100 câu, sai số khoảng ±10 điểm % ở mức tổng, ±22 điểm % mỗi hop; chênh lệch nhỏ giữa các dòng có thể chỉ là nhiễu và phải ghi chú.
+- **Đã chốt (người dùng đổi từ 100 xuống 25, đo trên dữ liệu thật):** test đúng **25 câu** (5 mỗi hop), cách ly chặt; `validation` = 12% phần sạch còn lại; seed 42. Kết quả thật: train 1.110, validation 151, test 25, quarantined 275 (17,6%), không rò rỉ. Với test 100 câu thì cách ly 39,5% (617 câu) và train còn 744; test 311 câu sẽ cách ly 60%. Lưu `configs/split.json` kèm hash; cả 4 baseline dùng chung.
+- **Tập báo cáo = chính tập `test` (25 câu, 5 câu mỗi hop), cố định theo seed.** Không dùng `--limit` vì dataset sắp xếp theo khối hop (sẽ chỉ lấy hop 1).
+- Cả ba chỉ số của bảng (F1, LLM Judge, Recall@5) tính trên cùng 25 câu này. Với 25 câu, sai số khoảng ±20 điểm % ở mức tổng, ±44 điểm % mỗi hop; chênh lệch nhỏ giữa các dòng có thể chỉ là nhiễu và phải ghi chú.
 - Chỉ số: dùng nguyên `evaluation.py` hiện có (`recall@5`, `f1`, `judge`). Không thêm chỉ số.
 - Corpus retrieval vẫn là toàn bộ 998 đoạn.
 
@@ -202,10 +202,10 @@ Giữ phong cách hiện có: type hint `X | None`, dependency injection qua `po
 ## 9. Success criteria
 
 1. `outputs/table.md` là **một bảng** có 4 dòng (B1–B4), 3 cột F1, LLM Judge, Recall@5; B1 là chỉ số gốc, các dòng còn lại kèm mức chênh so với B1.
-2. B1–B4 dùng cùng `split.json` và cùng 100 câu `test`.
+2. B1–B4 dùng cùng `split.json` và cùng 25 câu `test`.
 3. Test chống rò rỉ qua.
 4. B2 và B3 tái lập được từ lệnh trong `docs/baselines.md`; B4 không có bước huấn luyện.
-5. Dưới bảng có ghi chú về tập test giữ lại và sai số của 100 câu (mục 2).
+5. Dưới bảng có ghi chú về tập test giữ lại và sai số của 25 câu (mục 2).
 6. `main` không thay đổi.
 7. Mỗi host chỉ cần `make setup` rồi **một** lệnh `make bN`; sau khi ngắt, chạy lại tiếp tục từ chỗ dở mà không làm lại bước đã xong.
 8. Mọi artifact ở mục 4a được tạo tự động và gói trong `outputs/report-bN.tar.gz`.
@@ -217,10 +217,10 @@ Giữ phong cách hiện có: type hint `X | None`, dependency injection qua `po
 0. ~~Một nhánh gộp hay từng nhánh~~ **Đã chốt: 4 host, mỗi host một nhánh** (H1 `baseline/1-local`, H2 `baseline/2-embed`, H3 `baseline/3-lora`, H4 `baseline/4-all`). Model chuyển qua Hugging Face Hub private: bạn có tài khoản/token HF và đồng ý dùng repo private không?
 
 1. Tên chính xác model judge (`Qwen/Qwen3.5-9B`?) và vLLM đã hỗ trợ Qwen3.5 chưa; cách tắt thinking.
-2. ~~Mức mất dữ liệu do cách ly~~ **Đã chốt:** 39,5% (617 câu) với test 100 câu; còn train 744 và validation 100. Tăng số câu test về sau sẽ làm train giảm mạnh (test 200 câu: còn ~390 câu sạch).
+2. ~~Mức mất dữ liệu do cách ly~~ **Đã chốt:** 17,6% (275 câu) với test 25 câu; còn train 1.110 và validation 151. Tăng số câu test về sau sẽ làm train giảm mạnh (test 100 câu: train 744; test 200 câu: còn ~390 câu sạch).
 3. ~~Map khóa `evidence`~~ **Đã kiểm tra (T3):** ánh xạ theo vị trí đúng, nhưng chỉ 13,8% bản ghi có `evidence` là trích dẫn nguyên văn; phần còn lại là câu tóm tắt. Dữ liệu LoRA cắt quote trực tiếp từ đoạn vàng theo độ trùng từ với câu trả lời tham chiếu.
 4. PEFT/TRL và `--enable-lora` của vLLM có hỗ trợ kiến trúc Qwen3.5 không.
 5. ~~GPU cho LoRA~~ **Đã chốt: 48GB** (LoRA bf16). Lưu ý khi đánh giá: Qwen3.5-4B + adapter (~9GB) và judge Qwen3.5-9B (~19GB bf16) chạy cùng lúc trên 48GB rất sát KV cache; cần chọn giữa lượng tử hóa judge (AWQ/FP8), hạ `--max-model-len`, hoặc chạy hai lượt (sinh câu trả lời trước, chấm điểm sau).
-6. ~~Số câu đánh giá~~ **Đã chốt: 100 câu test** (20 mỗi hop); xem kết quả rồi quyết định có tăng không.
-6. Nếu mức tăng nhỏ hơn sai số của 100 câu, có tăng số câu đánh giá (ví dụ toàn bộ ~312 câu test) cho các dòng cuối không.
+6. ~~Số câu đánh giá~~ **Đã chốt: 25 câu test** (5 mỗi hop, người dùng đổi từ 100 để chạy nhanh hơn); xem kết quả rồi quyết định có tăng không.
+6. Nếu mức tăng nhỏ hơn sai số của 25 câu, có tăng số câu đánh giá (ví dụ 100 hoặc toàn bộ ~312 câu test) cho các dòng cuối không.
 

@@ -8,12 +8,12 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 ## Phase 1: `baseline/1-local`
 
 ### Task 1: Module chia split chống rò rỉ + lệnh `vihermes split`
-**Description:** Thêm `splits.py` với "test trước, cách ly sau": chọn câu test phân tầng theo hop, gom đoạn vàng, loại khỏi train/validation các câu chạm đoạn vàng của test (`quarantined`), chia phần còn lại train/validation. `test` có đúng `test_size` câu (mặc định 100, 20 mỗi hop) và cũng là tập báo cáo; `validation` lấy 12% phần sạch.
+**Description:** Thêm `splits.py` với "test trước, cách ly sau": chọn câu test phân tầng theo hop, gom đoạn vàng, loại khỏi train/validation các câu chạm đoạn vàng của test (`quarantined`), chia phần còn lại train/validation. `test` có đúng `test_size` câu (mặc định 25, 5 mỗi hop) và cũng là tập báo cáo; `validation` lấy 12% phần sạch.
 **Acceptance criteria:**
 - [x] Cùng seed cho cùng kết quả và cùng hash; khác seed cho kết quả khác.
 - [x] Mỗi câu thuộc đúng một trong `train/validation/test/quarantined`; tổng bằng số câu đầu vào.
 - [x] Không đoạn vàng nào của câu test xuất hiện trong gold của câu train hoặc validation.
-- [x] `test` có đúng 100 câu, 20 mỗi hop 1–5 (không còn khóa `test_100`).
+- [x] `test` có đúng 25 câu, 5 mỗi hop 1–5 (không còn khóa `test_100`).
 - [x] `vihermes split` in thống kê: số câu từng phần theo hop, số bị cách ly (% tổng), số đoạn từng phần.
 **Verification:**
 - [x] `pytest -q tests/test_splits.py`
@@ -26,7 +26,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 **Description:** Chạy `vihermes split` trên `dataset/dataset.jsonl`, xem mức cách ly và kích thước train/validation thật. Đây là việc rủi ro, làm sớm để biết có cần đổi tỉ lệ trước khi xây thêm.
 **Acceptance criteria:**
 - [x] `configs/split.json` được tạo; chạy lần hai cho cùng hash.
-- [x] Báo cáo thống kê gửi người dùng; **người dùng quyết**. Đã chốt: test đúng 100 câu, cách ly chặt (39,5%); train 744, validation 100.
+- [x] Báo cáo thống kê gửi người dùng; **người dùng quyết**. Đã chốt (đổi từ 100 xuống 25): test đúng 25 câu, cách ly chặt (17,6%); train 1.110, validation 151.
 - [x] Chỉ commit `configs/split.json` sau khi người dùng đồng ý.
 **Verification:**
 - [x] Chạy hai lần, so hash: `python -c "import json;print(json.load(open('configs/split.json'))['hash'])"`
@@ -117,7 +117,7 @@ Lệnh kiểm chứng chung cho mọi task: `pytest -q` và `ruff check src test
 - [x] Bảng đúng 3 cột F1, LLM Judge, Recall@5, 4 chữ số thập phân, thang 0–1.
 - [x] `compare` **từ chối** (lỗi rõ) nếu hash split, cấu hình judge hoặc hash corpus khác nhau giữa các gói.
 - [x] Gói không chứa tệp `.safetensors`, `.db`, `.npz`.
-- [x] Dưới bảng có ghi chú về tập test giữ lại và sai số của 100 câu.
+- [x] Dưới bảng có ghi chú về tập test giữ lại và sai số của 25 câu.
 **Verification:**
 - [x] `pytest -q tests/test_report.py` (dữ liệu giả nhiều trường hợp: khớp, lệch hash, thiếu B1)
 **Dependencies:** Task 4
