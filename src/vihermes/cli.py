@@ -181,7 +181,7 @@ def parser():
     split.add_argument("--output")
     split.add_argument("--check", help="verify this split file against --qa instead of writing")
     split.add_argument("--seed", type=int, default=42)
-    split.add_argument("--test-size", type=int, default=100)
+    split.add_argument("--test-size", type=int, default=25)
     split.add_argument("--validation", type=float, default=0.12)
     pack = sub.add_parser("pack", help="bundle one run's numbers into a report archive")
     pack.add_argument("--run", required=True)

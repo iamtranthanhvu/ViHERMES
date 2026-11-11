@@ -14,7 +14,7 @@ def _digest(split):
     return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
 
 
-def make_split(examples, seed=42, test_size=100, validation=0.12):
+def make_split(examples, seed=42, test_size=25, validation=0.12):
     """Return a split dict.
 
     ``test`` holds ``test_size`` questions, stratified evenly across hop levels; it is also the
