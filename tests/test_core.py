@@ -148,6 +148,21 @@ def test_semantic_verifier_can_reject_exact_quotes():
     )
 
 
+def test_truncated_verifier_reply_rejects_the_answer_instead_of_crashing():
+    import json
+
+    class LLM:
+        def json(self, system, payload):
+            return json.loads('{"supported": false, "reasons": ["a long rambling reason')
+
+    n = node("a")
+    errors = Auditor(LLM()).audit(
+        "?", [Claim("x", ["a"], {"a": n.text})], Retrieval([Evidence(n, 1)])
+    )
+    assert "semantic_grounding_failed" in errors
+    assert "verifier_output_not_valid_json" in errors
+
+
 def test_conductor_abstention_and_grounded_answer(graph):
     put(graph, node("a", "Hồ sơ gồm bản điện tử."))
     pathfinder = Pathfinder(HybridRetriever(graph, weight=0), GraphPropagator(graph))
