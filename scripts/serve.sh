@@ -69,8 +69,11 @@ start() { # name mode port model revision gpu_util [extra args...]
     echo "serve.sh: restarting $name for $mode mode"
     stop_one "$name"
   fi
+  # Qwen3.5 mixes in Mamba layers: every concurrent sequence needs its own state block, and vLLM
+  # refuses to start when its default of 256 sequences does not fit next to the weights. The
+  # evaluation sends one request at a time, so a small cap is enough.
   local args=(serve "$model" --port "$port" --max-model-len "$MAX_MODEL_LEN"
-    --gpu-memory-utilization "$util")
+    --max-num-seqs "${MAX_NUM_SEQS:-8}" --gpu-memory-utilization "$util")
   [ -z "$revision" ] || args+=(--revision "$revision")
   args+=("$@")
   nohup "$VLLM_BIN" "${args[@]}" >"$log" 2>&1 &
