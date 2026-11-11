@@ -27,7 +27,7 @@ tmux new -s run                 # keeps the job alive if the connection drops
 
 make setup                      # install, build the corpus, check the split
 make smoke                      # first time only: 5 questions, checks thinking is off and JSON is valid
-make b1                         # full evaluation of the 100 test questions
+make b1                         # full evaluation of the 25 test questions
 ```
 
 `make b1` starts the two vLLM servers, evaluates, then stops them. If it is interrupted, run
