@@ -150,6 +150,10 @@ vihermes retrieve --db outputs/vihermes.db --dense-weight 0 \
 
 The [running instructions](docs/usage.md) cover neural retrieval, generative answers, raw-document ingestion, and optional Neo4j/Milvus storage.
 
+## Chat
+
+A web chat on the B3 pipeline: `bash scripts/chat.sh` on a GPU host. See [docs/chat.md](docs/chat.md).
+
 ## Evaluation
 
 Run retrieval evaluation on every bundled record:

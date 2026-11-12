@@ -108,11 +108,11 @@ Lệnh kiểm chứng chung: `pytest -q tests/test_chat.py` và `ruff check src 
 ### Task 6: docs + `make dryrun-chat` + rà tiêu chí
 **Description:** `docs/chat.md` (cách chạy, phạm vi 998 đoạn, giới hạn B3 7/25). `make/chat.mk` với `dryrun-chat` (Conductor giả trong test, **không** là chế độ sản phẩm). Đi qua 9 tiêu chí thành công của spec mục 9.
 **Acceptance criteria:**
-- [ ] `make dryrun-chat` thoát mã 0, không GPU, không mạng.
-- [ ] Từng tiêu chí 1–9 trong `SPEC-chat.md` có bằng chứng (lệnh/ảnh) ghi vào `docs/chat.md` hoặc PR.
-- [ ] `main` không đổi (`git diff main -- ':!…'` chỉ ở nhánh `feature/chat`).
+- [x] `make dryrun-chat` thoát mã 0, không GPU, không mạng.
+- [x] Tiêu chí kiểm được offline đã có bằng chứng (test); tiêu chí cần GPU nằm ở mục "Còn lại" bên dưới.
+- [x] `main` không đổi (`git diff main -- ':!…'` chỉ ở nhánh `feature/chat`).
 **Verification:**
-- [ ] `make dryrun-chat`, `pytest -q`, `ruff check . && ruff format --check .`
+- [x] `make dryrun-chat`, `pytest -q`, `ruff check . && ruff format --check .`
 **Dependencies:** Task 5
 **Files:** `docs/chat.md`, `make/chat.mk`, `Makefile` (include), `README.md` (một dòng)
 **Scope:** Small
@@ -120,3 +120,9 @@ Lệnh kiểm chứng chung: `pytest -q tests/test_chat.py` và `ruff check src 
 ### Checkpoint 4: hoàn tất
 - [ ] Mọi tiêu chí thành công đạt
 - [ ] Người dùng duyệt để commit và (nếu muốn) mở PR
+
+## Còn lại (cần người dùng, GPU thật)
+- [ ] Task 3: chạy `bash scripts/chat.sh` trên host; `/api/health` ra `mode: b3`, `corpus_units: 998`
+- [ ] Hỏi 5 câu từ tập test: thấy `answered`/`refused`/`clarification`, ≤ 20 giây/câu
+- [ ] Xem giao diện sáng/tối và mobile bằng mắt
+- [ ] Duyệt để mở PR (chưa push)
