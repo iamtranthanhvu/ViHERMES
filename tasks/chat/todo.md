@@ -48,17 +48,17 @@ Lệnh kiểm chứng chung: `pytest -q tests/test_chat.py` và `ruff check src 
 ## Phase 2: B3 thật trên host GPU (rủi ro cao, làm trước giao diện)
 
 ### Task 3: `scripts/chat.sh`: một lệnh bật B3 thật
-**Description:** Theo spec mục 3: kiểm GPU/python, `make setup`, tải adapter (hỏi HF token bằng `read -rsp` khi cần, ghim revision `ca7768c…`), `scripts/serve.sh lora`, bật `vihermes chat` nền, đợi `/api/health`, in địa chỉ + lệnh SSH tunnel; `stop` dừng cả hai. Bước nào xong thì bỏ qua. Thêm `LORA_FT_REVISION` vào `configs/host.env`.
+**Description:** Theo spec mục 3: kiểm GPU/python, `make setup`, tải adapter (hỏi HF token bằng `read -rsp` khi cần, ghim revision `ca7768c…`), `scripts/serve.sh lora`, bật `vihermes chat` nền, đợi `/api/health`, in địa chỉ + lệnh SSH tunnel; `stop` dừng cả hai. Bước nào xong thì bỏ qua. Thêm `CHAT_LORA_REVISION` (không dùng `LORA_FT_REVISION` vì `b4.mk` tự ghi đè biến đó), `CHAT_PORT`, `CHAT_TIMEOUT` vào `configs/host.env`.
 **Acceptance criteria:**
-- [ ] Chạy lần hai không làm gì thừa, không lỗi.
-- [ ] Token không xuất hiện trong log, `ps`, file repo (kiểm bằng grep sau khi chạy).
-- [ ] `/api/health` trả `ok`, `mode: "b3"`, `corpus_units: 998`.
-- [ ] `curl` hỏi một câu từ tập test trả `answered` hoặc `refused` có nguồn, ≤ 20 giây.
-- [ ] `chat.sh stop` dừng vLLM và chat.
+- [x] Chạy lần hai không làm gì thừa, không lỗi.
+- [x] Token không xuất hiện trong log, `ps`, file repo (kiểm bằng grep sau khi chạy).
+- [ ] `/api/health` trả `ok`, `mode: "b3"`, `corpus_units: 998` (kiểm trên host; offline đã kiểm bằng stub).
+- [ ] `curl` hỏi một câu từ tập test trả `answered` hoặc `refused` có nguồn, ≤ 20 giây (kiểm trên host).
+- [x] `chat.sh stop` dừng vLLM và chat.
 **Verification:**
-- [ ] `bash -n scripts/chat.sh` và `shellcheck scripts/chat.sh` (nếu có)
-- [ ] Test offline: chạy script với `serve.sh`/`vihermes` giả, kiểm thứ tự bước và không lộ token
-- [ ] **Người dùng chạy trên host GPU** và dán đầu ra `/api/health` + một câu `curl`
+- [x] `bash -n scripts/chat.sh` và `shellcheck scripts/chat.sh` (nếu có)
+- [x] Test offline: chạy script với `serve.sh`/`vihermes` giả, kiểm thứ tự bước và không lộ token
+- [ ] **Người dùng chạy trên host GPU** (CHƯA: cần GPU thật) và dán đầu ra `/api/health` + một câu `curl`
 **Dependencies:** Task 2
 **Files:** `scripts/chat.sh`, `configs/host.env`, `tests/test_chat_script.py`
 **Scope:** Medium
