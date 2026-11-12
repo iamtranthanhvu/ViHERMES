@@ -58,7 +58,9 @@ class Service:
         started = time.perf_counter()
         answer, retrieval = self.conductor.run(question)
         status = classify(answer)
-        out = {"status": status, "answer": answer.answer}
+        # The pipeline appends raw node ids like [D::article:1]; the page shows sources instead.
+        text = "\n\n".join(c.text for c in answer.claims) if status == "answered" else answer.answer
+        out = {"status": status, "answer": text}
         if status == "answered":
             out["sources"] = answered_sources(answer)
         else:

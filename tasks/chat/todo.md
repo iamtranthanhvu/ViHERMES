@@ -74,13 +74,13 @@ Lệnh kiểm chứng chung: `pytest -q tests/test_chat.py` và `ruff check src 
 ### Task 4: Chuyển `demo/index.html` thành trang thật
 **Description:** Sao chép vào `src/vihermes/chat/static/index.html`, **giữ nguyên CSS/markup**. Bỏ `ITEMS`, `match`, `resolve`, `STEPS` theo đồng hồ, `wait()` giả lập. `ask()` gọi `POST /api/ask`; chờ hiện "Đang tra cứu…" + số giây. Vẽ `answered`/`refused`/`clarification` bằng `sourcesUI`, `REASONS`, `HINT` sẵn có. Nhãn sidebar lấy từ `/api/health`.
 **Acceptance criteria:**
-- [ ] Hỏi một câu không có trong 12 câu mẫu vẫn nhận kết quả từ server.
-- [ ] Ba trạng thái hiển thị đúng như demo giả.
-- [ ] Nội dung model sinh chỉ vào DOM bằng `textContent`.
-- [ ] Không còn `ITEMS`, `resolve(`, chữ "mô phỏng" trong file.
+- [x] Hỏi một câu không có trong 12 câu mẫu vẫn nhận kết quả từ server.
+- [x] Ba trạng thái hiển thị đúng như demo giả.
+- [x] Nội dung model sinh chỉ vào DOM bằng `textContent`.
+- [x] Không còn `ITEMS`, `resolve(`, chữ "mô phỏng" trong file.
 **Verification:**
-- [ ] `pytest -q tests/test_chat.py -k static` (grep các điều trên)
-- [ ] Mở trang với server thật (Chrome): hỏi 3 câu; chụp ảnh sáng/tối
+- [x] `pytest -q tests/test_chat.py -k static` (grep các điều trên)
+- [x] Mở trang trong Chrome với server + `fake_vllm` (chỉ để dựng thử): hỏi, thấy nguồn và trích dẫn; tắt model thấy lỗi 503 tiếng Việt. Chưa kiểm với B3 thật, chưa chụp so sáng/tối
 **Dependencies:** Task 2 (chạy được với server giả để dev; kiểm cuối với Task 3)
 **Files:** `src/vihermes/chat/static/index.html`, `tests/test_chat.py`
 **Scope:** Medium

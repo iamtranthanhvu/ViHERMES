@@ -39,7 +39,7 @@ def refused(reasons):
 def test_answered_has_titled_sources_with_verbatim_quote():
     out = service(*answered()).ask("q")
     assert out["status"] == "answered"
-    assert out["answer"].startswith("Gồm Giám đốc.")
+    assert out["answer"] == "Gồm Giám đốc."  # no raw "[c1]" node ids
     assert out["sources"] == [
         {"id": "c1", "title": "Thông tư 01", "quote": "Lãnh đạo gồm Giám đốc"}
     ]
