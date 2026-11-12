@@ -67,3 +67,15 @@ class Service:
             out["reason"] = map_reason(answer.reasons)
         out["seconds"] = round(time.perf_counter() - started, 1)
         return out
+
+
+def served_models(base_url, timeout=2):
+    """Model ids the vLLM server lists, or [] when it cannot be reached."""
+    import json
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(base_url.rstrip("/") + "/models", timeout=timeout) as r:
+            return [m["id"] for m in json.load(r)["data"]]
+    except (OSError, ValueError, KeyError, TypeError):
+        return []

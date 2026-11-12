@@ -112,6 +112,7 @@ def parser():
         "index",
         "retrieve",
         "ask",
+        "chat",
         "evaluate",
         "construct",
         "make-embed-data",
@@ -124,6 +125,7 @@ def parser():
             "index",
             "retrieve",
             "ask",
+            "chat",
             "evaluate",
             "construct",
             "make-embed-data",
@@ -139,19 +141,19 @@ def parser():
             )
             command.add_argument("--index", default="outputs/dense.npz")
             command.add_argument("--vector", choices=["numpy", "milvus"], default="numpy")
-        if name in ("retrieve", "ask", "evaluate", "make-embed-data", "make-lora-data"):
+        if name in ("retrieve", "ask", "chat", "evaluate", "make-embed-data", "make-lora-data"):
             command.add_argument("--dense-weight", type=float, default=0.5)
             command.add_argument("-k", type=int, default=5)
             command.add_argument("--max-depth", type=int, default=4)
             command.add_argument("--max-nodes", type=int, default=24)
             command.add_argument("--max-chars", type=int, default=16000)
-        if name in ("ask", "evaluate", "construct"):
+        if name in ("ask", "chat", "evaluate", "construct"):
             command.add_argument("--model", default="gpt-4o-mini")
             command.add_argument("--base-url", help="OpenAI-compatible endpoint for --model")
             command.add_argument(
                 "--no-thinking", action="store_true", help="disable reasoning mode (vLLM/Qwen)"
             )
-        if name in ("ask", "evaluate"):
+        if name in ("ask", "chat", "evaluate"):
             command.add_argument(
                 "--conductor-model", help="model for the Conductor only (default: --model)"
             )
@@ -163,6 +165,9 @@ def parser():
             command.add_argument("--force", action="store_true")
         elif name in ("retrieve", "ask"):
             command.add_argument("question")
+        elif name == "chat":
+            command.add_argument("--host", default="127.0.0.1")
+            command.add_argument("--port", type=int, default=8080)
         elif name == "evaluate":
             command.add_argument("--qa", required=True)
             command.add_argument("--output", required=True)
@@ -310,6 +315,40 @@ def demo(output):
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
         )
         return payload
+
+
+def chat(args, store, pathfinder):
+    """Serve the chat page on the real B3 pipeline; there is deliberately no offline mode."""
+    from .chat.server import make_server
+    from .chat.service import Service, served_models
+
+    if not (args.base_url and args.conductor_model):
+        raise ValueError("chat needs --base-url and --conductor-model (the LoRA adapter name)")
+    args.generator = "openai"
+
+    def ready():
+        return {args.model, args.conductor_model} <= set(served_models(args.base_url))
+
+    if not ready():
+        raise OSError(
+            f"vLLM at {args.base_url} is not serving {args.model} and {args.conductor_model}; "
+            "start it with scripts/serve.sh lora"
+        )
+    meta = {
+        "model": args.model,
+        "lora": args.conductor_model,
+        "corpus_units": len(units(store)),
+        "mode": "b3",
+    }
+    server = make_server(Service(conductor(args, pathfinder), meta), args.host, args.port, ready)
+    print(f"vihermes chat: http://{args.host}:{server.server_address[1]}", flush=True)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+    return {"stopped": True}
 
 
 def run(args):
@@ -480,6 +519,8 @@ def run(args):
             return {"output_dir": str(out), **report}
         if args.command == "retrieve":
             return asdict(pathfinder.retrieve(Plan(args.question)))
+        if args.command == "chat":
+            return chat(args, store, pathfinder)
         if args.command == "ask":
             return asdict(conductor(args, pathfinder).ask(args.question))
         examples = load_qa(args.qa)

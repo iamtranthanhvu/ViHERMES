@@ -25,15 +25,15 @@ Lệnh kiểm chứng chung: `pytest -q tests/test_chat.py` và `ruff check src 
 ### Task 2: `server.py` + lệnh `vihermes chat`: API chạy được
 **Description:** HTTP stdlib phục vụ `GET /`, `GET /api/health`, `POST /api/ask`. Validate (`422` rỗng hoặc >500 ký tự, JSON sai), khóa tuần tự + hàng đợi tối đa 3 (`429`), `503` khi vLLM không phản hồi, `500` không stack. Lệnh `chat` trong `cli.py` dựng B3 (embedding bge-m3, `--conductor-model`) và **thoát lỗi rõ nếu vLLM/adapter thiếu**.
 **Acceptance criteria:**
-- [ ] `curl -XPOST /api/ask -d '{"question":"…"}'` trả đúng hình dạng spec mục 4.
-- [ ] Các mã lỗi 422/429/503/500 đúng; server vẫn sống sau mỗi lỗi.
-- [ ] Hai yêu cầu đồng thời không chạy `ask` cùng lúc (test bằng Conductor giả có độ trễ).
-- [ ] Log không chứa nội dung câu hỏi.
-- [ ] `vihermes chat` không có tùy chọn nào chọn chế độ giả/extractive.
+- [x] `curl -XPOST /api/ask -d '{"question":"…"}'` trả đúng hình dạng spec mục 4.
+- [x] Các mã lỗi 422/429/503/500 đúng; server vẫn sống sau mỗi lỗi.
+- [x] Hai yêu cầu đồng thời không chạy `ask` cùng lúc (test bằng Conductor giả có độ trễ).
+- [x] Log không chứa nội dung câu hỏi.
+- [x] `vihermes chat` không có tùy chọn nào chọn chế độ giả/extractive.
 **Verification:**
-- [ ] `pytest -q tests/test_chat.py -k "api or queue or log"`
-- [ ] `ruff check src tests`
-- [ ] Thủ công: khởi chạy server với `Service` giả trong script test, `curl` ba kết quả
+- [x] `pytest -q tests/test_chat_server.py tests/test_chat_cli.py` (server in separate files)
+- [x] `ruff check src tests`
+- [x] Thủ công: khởi chạy server với `Service` giả trong script test, `curl` ba kết quả
 **Dependencies:** Task 1
 **Files:** `src/vihermes/chat/server.py`, `src/vihermes/cli.py`, `tests/test_chat.py`
 **Scope:** Medium
