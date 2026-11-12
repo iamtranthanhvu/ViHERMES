@@ -10,14 +10,14 @@ Lệnh kiểm chứng chung: `pytest -q tests/test_chat.py` và `ruff check src 
 ### Task 1: `service.py`: từ `Answer` thành JSON của spec
 **Description:** Hàm thuần `classify`, `map_reason`, `build_sources` và lớp `Service(conductor, meta).ask(question)` trả `{status, answer, sources[{id,title,quote}], reason, seconds}`. Nguồn khi trả lời lấy `quote` từ `claims.quotes`; khi từ chối lấy danh sách văn bản từ `Retrieval.evidence` (chỉ `id`, `title`).
 **Acceptance criteria:**
-- [ ] `answered` có ≥1 nguồn, mỗi nguồn có `title` (từ `Node.title`) và `quote` nguyên văn.
-- [ ] `refused` có `reason` ∈ {insufficient, quote, semantic, other} và nguồn chỉ có `id`+`title`.
-- [ ] `clarification_requested` → `status: "clarification"`.
-- [ ] Mã lý do lạ → `other`, không lộ chuỗi thô.
-- [ ] Không còn `trace` trong kết quả.
+- [x] `answered` có ≥1 nguồn, mỗi nguồn có `title` (từ `Node.title`) và `quote` nguyên văn.
+- [x] `refused` có `reason` ∈ {insufficient, quote, semantic, other} và nguồn chỉ có `id`+`title`.
+- [x] `clarification_requested` → `status: "clarification"`.
+- [x] Mã lý do lạ → `other`, không lộ chuỗi thô.
+- [x] Không còn `trace` trong kết quả.
 **Verification:**
-- [ ] `pytest -q tests/test_chat.py -k service` (Conductor giả, corpus `tests/fixtures/dryrun`)
-- [ ] `ruff check src tests`
+- [x] `pytest -q tests/test_chat.py -k service` (Conductor giả, corpus `tests/fixtures/dryrun`)
+- [x] `ruff check src tests`
 **Dependencies:** None
 **Files:** `src/vihermes/chat/__init__.py`, `src/vihermes/chat/service.py`, `tests/test_chat.py`
 **Scope:** Small
