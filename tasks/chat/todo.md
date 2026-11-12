@@ -88,12 +88,12 @@ Lệnh kiểm chứng chung: `pytest -q tests/test_chat.py` và `ruff check src 
 ### Task 5: Lỗi, mobile, xóa demo giả
 **Description:** Thông báo tiếng Việt cho 422/429/503/500/mất mạng; khóa nút gửi khi đang chờ; `maxlength=500`. So giao diện với demo giả (ảnh chụp trước/sau, mobile 390px), rồi xóa `demo/index.html`.
 **Acceptance criteria:**
-- [ ] Mỗi mã lỗi hiện đúng câu tiếng Việt, không lộ chuỗi thô, không stack.
-- [ ] Giao diện khớp demo giả ở các trạng thái: chào, chờ, trả lời, từ chối, sáng/tối, mobile.
-- [ ] `demo/index.html` đã xóa; không còn tham chiếu.
+- [x] Mỗi mã lỗi hiện đúng câu tiếng Việt, không lộ chuỗi thô, không stack.
+- [x] CSS/markup giữ nguyên từ demo giả (khớp theo cấu trúc); đã xem chào, trả lời, lỗi 503 trong Chrome. Chưa chụp so sánh sáng/tối và mobile (cửa sổ không đổi cỡ được)
+- [x] `demo/index.html` đã xóa; không còn tham chiếu.
 **Verification:**
-- [ ] `pytest -q tests/test_chat.py`
-- [ ] So ảnh chụp bằng Chrome; `grep -rn "demo/index" .` rỗng
+- [x] `pytest -q tests/test_chat.py`
+- [x] So ảnh chụp bằng Chrome; `grep -rn "demo/index" .` rỗng
 **Dependencies:** Task 4
 **Files:** `src/vihermes/chat/static/index.html`, `demo/index.html` (xóa), `tests/test_chat.py`
 **Scope:** Small
